@@ -35,18 +35,19 @@ async function upsertActionStatus(area, place, isActive) {
     console.info('Supabase 未設定のため action_status の保存をスキップします');
     return;
   }
-  if (!area || !place) {
-    console.warn('upsertActionStatus: area/place が未設定です', area, place);
+  if (!area) {
+    console.warn('upsertActionStatus: area が未設定です', area, place);
     return;
   }
   try {
     const payload = {
       area_name: area,
-      place_name: place,
+      place_name: place || '',
       is_active: isActive,
       updated_at: new Date().toISOString(),
     };
     // onConflict の列は Supabase 側でユニーク制約が設定されている想定
+    console.info('upsertActionStatus: payload=', payload);
     const { data, error } = await supabase
       .from('action_status')
       .upsert(payload, { onConflict: ['area_name', 'place_name'] });
@@ -65,18 +66,23 @@ async function upsertActionStatus(area, place, isActive) {
  */
 async function fetchActionStatus(area, place) {
   if (!supabase) return null;
-  if (!area || !place) return null;
+  if (!area) return null;
   try {
-    const { data, error } = await supabase
-      .from('action_status')
-      .select('is_active')
-      .eq('area_name', area)
-      .eq('place_name', place)
-      .single();
+    let query = supabase.from('action_status').select('is_active');
+    query = query.eq('area_name', area);
+    if (place && place !== '') {
+      query = query.eq('place_name', place);
+    } else {
+      // place が空なら place_name が空文字または NULL のレコードを探す
+      query = query.or(`place_name.eq.'' , place_name.is.null`);
+    }
+    // 単一レコード想定のため single を試みる
+    const { data, error } = await query.single();
     if (error) {
       console.warn('fetchActionStatus: データ取得エラー', error);
       return null;
     }
+    console.info('fetchActionStatus: result=', data);
     return data ? !!data.is_active : null;
   } catch (err) {
     console.error('fetchActionStatus で例外:', err);
@@ -861,17 +867,29 @@ function showActionCard(cardId, cardLabel) {
   toggle.style.transform = 'scale(1.25)';
   toggle.style.marginRight = '0.6em';
   toggle.id = 'start-action-toggle';
-  // デフォルトは localStorage。Supabase が有効なら上書きして最新状態を取得する。
-  toggle.checked = window.localStorage.getItem('action_started') === '1';
-  (async () => {
-    const active = await fetchActionStatus(CURRENT_AREA, CURRENT_PLACE);
-    if (active !== null) {
-      toggle.checked = !!active;
-    }
-  })();
+  // デフォルトは未チェック。localStorage は補助目的に残すが、Supabase の取得結果で上書きする。
+  toggle.checked = false;
+  try {
+    (async () => {
+      const active = await fetchActionStatus(CURRENT_AREA, CURRENT_PLACE);
+      if (active !== null) {
+        toggle.checked = !!active;
+      } else {
+        // localStorage の値があれば参照する（過去の動作互換）
+        toggle.checked = window.localStorage.getItem('action_started') === '1';
+      }
+    })();
+  } catch (err) {
+    console.warn('toggle 初期化時にエラー:', err);
+  }
   toggle.addEventListener('change', async (e) => {
-    window.localStorage.setItem('action_started', e.target.checked ? '1' : '0');
-    await upsertActionStatus(CURRENT_AREA, CURRENT_PLACE, e.target.checked);
+    const checked = e.target.checked;
+    window.localStorage.setItem('action_started', checked ? '1' : '0');
+    try {
+      await upsertActionStatus(CURRENT_AREA || '', CURRENT_PLACE || '', checked);
+    } catch (err) {
+      console.error('トグル変更時の upsert で例外:', err);
+    }
   });
   toggleLabel.appendChild(toggle);
   toggleLabel.appendChild(document.createTextNode('アクションカードを開始する'));
