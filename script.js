@@ -342,6 +342,95 @@ const fallbackCards = {
       },
     ],
   },
+  fire_response: {
+    id: 'fire_response',
+    title: '火災発生対応',
+    sections: [
+      {
+        name: '火災発生時',
+        tasks: [
+          {
+            id: 'notify_alarm',
+            description: 'フロア全体に知らせて、火災報知器を押下',
+            type: 'boolean',
+            value: false,
+          },
+          {
+            id: 'initial_extinguish_judgement',
+            description: '消火器・消火栓による初期消火が可能か判断',
+            type: 'choice',
+            options: ['可能', '不可能'],
+            value: '',
+          },
+          {
+            id: 'initial_extinguish_execute',
+            description: '初期消火が可能なら消火器・消火栓で初期消火',
+            type: 'boolean',
+            value: false,
+          },
+          {
+            id: 'evacuate',
+            description: '初期消火が不可能なら建物外へ避難',
+            type: 'boolean',
+            value: false,
+          },
+          {
+            id: 'notify_open_chat',
+            description: '消火できなかった場合、オープンチャット担当者に火災発生・火元・避難路を伝える',
+            type: 'boolean',
+            value: false,
+          },
+          {
+            id: 'smoke_measures',
+            description: '煙が出ているときはハンカチで口と鼻を塞ぎ、身体を低くして避難',
+            type: 'boolean',
+            value: false,
+          },
+          {
+            id: 'confirm_and_report',
+            description: '消火できた場合、消火を再度確認し総本部に報告',
+            type: 'boolean',
+            value: false,
+          },
+        ],
+      },
+    ],
+  },
+  injured_response: {
+    id: 'injured_response',
+    title: '負傷者対応',
+    sections: [
+      {
+        name: '負傷者対応',
+        tasks: [
+          {
+            id: 'transport_injured',
+            description: '負傷者を応急処置室（保健室）に運ぶ（必要なら担架を使用）',
+            type: 'text',
+            value: '',
+          },
+          {
+            id: 'stretcher_location',
+            description: '担架の設置場所',
+            type: 'text',
+            value: '',
+          },
+          {
+            id: 'assist_staff',
+            description: '人手が不足する場合は教員などの協力を得る',
+            type: 'boolean',
+            value: false,
+          },
+          {
+            id: 'report_injured',
+            description: '負傷者の属性・人数等を総本部へ報告する',
+            type: 'text',
+            value: '',
+          },
+        ],
+      },
+    ],
+  },
 };
 
 /**
