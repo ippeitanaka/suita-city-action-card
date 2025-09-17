@@ -1,6 +1,37 @@
 -- Supabase 用の初期データ投入スクリプト
 -- このファイルを Supabase SQL エディタに貼り付けて実行すると
--- `cards` テーブルを作成し、初期カードデータを挿入します。
+-- `cards` テーブルと `action_status` テーブルを作成し、初期データを挿入します。
+
+-- action_status テーブル作成（トグル状態共有用）
+create table if not exists public.action_status (
+  id serial primary key,
+  area text not null,
+  place text not null,
+  is_active boolean not null default false,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  unique(area, place)
+);
+
+-- RLS 有効化
+alter table public.action_status enable row level security;
+
+-- 匿名ユーザー向けポリシー（全操作許可）
+create policy "allow_anon_all" on public.action_status
+  for all using (true) with check (true);
+
+-- updated_at 自動更新トリガー
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language 'plpgsql';
+
+create trigger update_action_status_updated_at
+  before update on public.action_status
+  for each row execute procedure update_updated_at_column();
 
 -- テーブル作成
 
