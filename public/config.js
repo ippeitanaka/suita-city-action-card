@@ -1,3 +1,3 @@
-// Sample config for local testing. Replace values or remove this file in production.
-window.SUPABASE_URL = '';
-window.SUPABASE_ANON_KEY = '';
+// This file is generated at build time. Do not edit.
+window.SUPABASE_URL = "";
+window.SUPABASE_ANON_KEY = "";

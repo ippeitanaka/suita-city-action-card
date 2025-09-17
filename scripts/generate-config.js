@@ -7,6 +7,9 @@ const outPath = './public/config.js';
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+console.log('SUPABASE_URL:', supabaseUrl ? '設定されています' : '未設定');
+console.log('SUPABASE_ANON_KEY:', supabaseKey ? '設定されています' : '未設定');
+
 const content = `// This file is generated at build time. Do not edit.
 window.SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
 window.SUPABASE_ANON_KEY = ${JSON.stringify(supabaseKey)};
