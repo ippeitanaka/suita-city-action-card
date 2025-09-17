@@ -648,48 +648,45 @@ function showActionCard(cardId, cardLabel) {
   const container = document.getElementById('content');
   container.innerHTML = '';
 
-  // 戻るボタン（重複生成防止のためid付与）
-  if (!document.getElementById('back-btn')) {
-    const backBtn = document.createElement('button');
-    backBtn.id = 'back-btn';
-    backBtn.textContent = '← 戻る';
-    backBtn.style.position = 'absolute';
-    backBtn.style.left = '1rem';
-    backBtn.style.top = '1rem';
-    backBtn.style.fontSize = '1rem';
-    backBtn.style.padding = '0.4rem 1.2rem';
-    backBtn.style.background = '#fff';
-    backBtn.style.border = '1px solid #888';
-    backBtn.style.borderRadius = '6px';
-    backBtn.style.zIndex = '10';
-    backBtn.onclick = showPlaceSelect;
-    container.appendChild(backBtn);
-  }
+  // ボタン用ラッパーdivを作成し、#contentの先頭に必ず挿入
+  const topDiv = document.createElement('div');
+  topDiv.style.display = 'flex';
+  topDiv.style.justifyContent = 'space-between';
+  topDiv.style.alignItems = 'center';
+  topDiv.style.marginBottom = '1.5rem';
 
-  // トグルボタン（重複生成防止のためid付与）
-  if (!document.getElementById('start-action-toggle')) {
-    const toggleDiv = document.createElement('div');
-    toggleDiv.style.textAlign = 'center';
-    toggleDiv.style.margin = '2.5rem 0 1.2rem 0';
-    const toggleLabel = document.createElement('label');
-    toggleLabel.style.fontWeight = 'bold';
-    toggleLabel.style.fontSize = '1.1rem';
-    toggleLabel.style.cursor = 'pointer';
-    const toggle = document.createElement('input');
-    toggle.type = 'checkbox';
-    toggle.style.transform = 'scale(1.3)';
-    toggle.style.marginRight = '0.7em';
-    toggle.id = 'start-action-toggle';
-    toggle.checked = window.localStorage.getItem('action_started') === '1';
-    toggle.addEventListener('change', (e) => {
-      window.localStorage.setItem('action_started', e.target.checked ? '1' : '0');
-      // 今後: Supabaseに状態保存/反映
-    });
-    toggleLabel.appendChild(toggle);
-    toggleLabel.appendChild(document.createTextNode('アクションカードを開始する'));
-    toggleDiv.appendChild(toggleLabel);
-    container.appendChild(toggleDiv);
-  }
+  // 戻るボタン
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '← 戻る';
+  backBtn.style.fontSize = '1rem';
+  backBtn.style.padding = '0.4rem 1.2rem';
+  backBtn.style.background = '#fff';
+  backBtn.style.border = '1px solid #888';
+  backBtn.style.borderRadius = '6px';
+  backBtn.style.zIndex = '10';
+  backBtn.onclick = showPlaceSelect;
+  topDiv.appendChild(backBtn);
+
+  // トグルボタン
+  const toggleLabel = document.createElement('label');
+  toggleLabel.style.fontWeight = 'bold';
+  toggleLabel.style.fontSize = '1.1rem';
+  toggleLabel.style.cursor = 'pointer';
+  const toggle = document.createElement('input');
+  toggle.type = 'checkbox';
+  toggle.style.transform = 'scale(1.3)';
+  toggle.style.marginRight = '0.7em';
+  toggle.id = 'start-action-toggle';
+  toggle.checked = window.localStorage.getItem('action_started') === '1';
+  toggle.addEventListener('change', (e) => {
+    window.localStorage.setItem('action_started', e.target.checked ? '1' : '0');
+    // 今後: Supabaseに状態保存/反映
+  });
+  toggleLabel.appendChild(toggle);
+  toggleLabel.appendChild(document.createTextNode('アクションカードを開始する'));
+  topDiv.appendChild(toggleLabel);
+
+  container.appendChild(topDiv);
 
   // タブUIを必ず表示
   document.getElementById('tabs').style.display = '';
