@@ -567,7 +567,13 @@ function setHeaderVisible(visible, cardLabel) {
   const tabs = document.getElementById('tabs');
   if (visible) {
     header.style.display = '';
-    header.innerHTML = `<h1>吹田市災害時アクションカードアプリ　南山田地区</h1>`;
+    // 既存のトップコントロールを保持（もしあれば取得して後で再追加する）
+    const existingControls = header.querySelector('#top-action-controls');
+    // header の中身を再構築
+    header.innerHTML = '';
+    const h1 = document.createElement('h1');
+    h1.textContent = '吹田市災害時アクションカードアプリ　南山田地区';
+    header.appendChild(h1);
     if (cardLabel) {
       const sub = document.createElement('div');
       sub.style.fontSize = '1.1rem';
@@ -575,6 +581,7 @@ function setHeaderVisible(visible, cardLabel) {
       sub.textContent = cardLabel;
       header.appendChild(sub);
     }
+    if (existingControls) header.appendChild(existingControls);
     if (tabs) tabs.style.display = '';
   } else {
     header.style.display = 'none';
