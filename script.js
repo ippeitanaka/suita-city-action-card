@@ -692,5 +692,5 @@ function showActionCard(cardId, cardLabel) {
   renderCard(cardId);
 }
 
-// 初期表示は必ず指揮者用カード画面
-showActionCard('commander', '指揮者用カード');
+// 初期表示はホーム画面
+showHome();
