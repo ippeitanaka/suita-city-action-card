@@ -738,7 +738,7 @@ function showHome() {
   btn.style.position = 'absolute';
   btn.style.left = '50%';
   btn.style.transform = 'translateX(-50%)';
-  btn.style.bottom = '12vh';
+  btn.style.bottom = '25vh';
   btn.style.background = 'rgba(255,255,255,0.95)';
   btn.style.border = '2px solid #333';
   btn.style.borderRadius = '8px';
