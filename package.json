@@ -1,0 +1,9 @@
+{
+  "name": "action_card_app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:config": "node ./scripts/generate-config.js",
+    "build": "npm run build:config && echo build-step-complete"
+  }
+}
