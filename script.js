@@ -814,23 +814,39 @@ function showPlaceSelect() {
   const title = document.createElement('h2');
   title.textContent = '実施場所を選択してください';
   placeDiv.appendChild(title);
-  const btn = document.createElement('button');
-  btn.textContent = '南山田小学校';
-  btn.style.fontSize = '1.2rem';
-  btn.style.padding = '1rem 2rem';
-  // Supabase からその場所が実施中かどうかチェックして色付け
-  (async () => {
-    const active = await fetchActionStatus(CURRENT_AREA || '南山田地区', '南山田小学校');
-    if (active) btn.style.background = '#ffef99';
-  })();
-  btn.addEventListener('click', () => {
-    // 地区・場所を設定
-    CURRENT_PLACE = '南山田小学校';
-    // タブUIを必ず表示し、指揮者用カード画面に遷移
-    document.getElementById('tabs').style.display = '';
-    showActionCard('commander', '指揮者用カード');
-  });
-  placeDiv.appendChild(btn);
+
+  // 場所ボタンの共通スタイルと作成関数
+  const createPlaceButton = (placeName) => {
+    const btn = document.createElement('button');
+    btn.textContent = placeName;
+    btn.style.fontSize = '1.2rem';
+    btn.style.padding = '1rem 2rem';
+    btn.style.margin = '0.5rem';
+    btn.style.display = 'block';
+    btn.style.width = '80%';
+    btn.style.maxWidth = '300px';
+    btn.style.marginLeft = 'auto';
+    btn.style.marginRight = 'auto';
+    // Supabase からその場所が実施中かどうかチェックして色付け
+    (async () => {
+      const active = await fetchActionStatus(CURRENT_AREA || '南山田地区', placeName);
+      if (active) btn.style.background = '#ffef99';
+    })();
+    btn.addEventListener('click', () => {
+      // 地区・場所を設定
+      CURRENT_PLACE = placeName;
+      // タブUIを必ず表示し、指揮者用カード画面に遷移
+      document.getElementById('tabs').style.display = '';
+      showActionCard('commander', '指揮者用カード');
+    });
+    return btn;
+  };
+
+  // 各場所のボタンを追加
+  placeDiv.appendChild(createPlaceButton('南山田小学校'));
+  placeDiv.appendChild(createPlaceButton('山田中学校'));
+  placeDiv.appendChild(createPlaceButton('南山田公民館'));
+
   container.appendChild(placeDiv);
 }
 
