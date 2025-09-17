@@ -648,12 +648,17 @@ function showActionCard(cardId, cardLabel) {
   const container = document.getElementById('content');
   container.innerHTML = '';
 
-  // ボタン用ラッパーdivを作成し、#contentの先頭に必ず挿入
+  // ヘッダー直下にボタン群を表示（既存のものがあれば置換）。
+  const existing = document.getElementById('top-action-controls');
+  if (existing) existing.remove();
   const topDiv = document.createElement('div');
+  topDiv.id = 'top-action-controls';
   topDiv.style.display = 'flex';
   topDiv.style.justifyContent = 'space-between';
   topDiv.style.alignItems = 'center';
-  topDiv.style.marginBottom = '1.5rem';
+  topDiv.style.marginTop = '0.4rem';
+  topDiv.style.marginBottom = '0.8rem';
+  topDiv.style.gap = '1rem';
 
   // 戻るボタン
   const backBtn = document.createElement('button');
@@ -663,30 +668,36 @@ function showActionCard(cardId, cardLabel) {
   backBtn.style.background = '#fff';
   backBtn.style.border = '1px solid #888';
   backBtn.style.borderRadius = '6px';
-  backBtn.style.zIndex = '10';
+  backBtn.style.zIndex = '1000';
   backBtn.onclick = showPlaceSelect;
   topDiv.appendChild(backBtn);
 
   // トグルボタン
   const toggleLabel = document.createElement('label');
   toggleLabel.style.fontWeight = 'bold';
-  toggleLabel.style.fontSize = '1.1rem';
+  toggleLabel.style.fontSize = '1.05rem';
   toggleLabel.style.cursor = 'pointer';
   const toggle = document.createElement('input');
   toggle.type = 'checkbox';
-  toggle.style.transform = 'scale(1.3)';
-  toggle.style.marginRight = '0.7em';
+  toggle.style.transform = 'scale(1.25)';
+  toggle.style.marginRight = '0.6em';
   toggle.id = 'start-action-toggle';
   toggle.checked = window.localStorage.getItem('action_started') === '1';
   toggle.addEventListener('change', (e) => {
     window.localStorage.setItem('action_started', e.target.checked ? '1' : '0');
-    // 今後: Supabaseに状態保存/反映
+    // TODO: Supabaseに状態保存/反映
   });
   toggleLabel.appendChild(toggle);
   toggleLabel.appendChild(document.createTextNode('アクションカードを開始する'));
   topDiv.appendChild(toggleLabel);
 
-  container.appendChild(topDiv);
+  // ヘッダーがあればその直下へ、なければ #content の先頭に挿入
+  const header = document.querySelector('header');
+  if (header) {
+    header.appendChild(topDiv);
+  } else {
+    container.insertBefore(topDiv, container.firstChild);
+  }
 
   // タブUIを必ず表示
   document.getElementById('tabs').style.display = '';
