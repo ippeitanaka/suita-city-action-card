@@ -19,6 +19,71 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY) {
   }
 }
 
+// 現在選択中の地区・場所を保持（Supabase に状態を保存する際に使用）
+let CURRENT_AREA = '';
+let CURRENT_PLACE = '';
+
+/**
+ * action_status を upsert して他ユーザーと共有できるようにする。
+ * テーブルは Supabase 側であらかじめ作成しておく前提。
+ * @param {string} area
+ * @param {string} place
+ * @param {boolean} isActive
+ */
+async function upsertActionStatus(area, place, isActive) {
+  if (!supabase) {
+    console.info('Supabase 未設定のため action_status の保存をスキップします');
+    return;
+  }
+  if (!area || !place) {
+    console.warn('upsertActionStatus: area/place が未設定です', area, place);
+    return;
+  }
+  try {
+    const payload = {
+      area_name: area,
+      place_name: place,
+      is_active: isActive,
+      updated_at: new Date().toISOString(),
+    };
+    // onConflict の列は Supabase 側でユニーク制約が設定されている想定
+    const { data, error } = await supabase
+      .from('action_status')
+      .upsert(payload, { onConflict: ['area_name', 'place_name'] });
+    if (error) console.error('action_status upsert エラー:', error);
+    else console.info('action_status upsert 成功', data);
+  } catch (err) {
+    console.error('upsertActionStatus で例外:', err);
+  }
+}
+
+/**
+ * 指定した地区・場所の action_status を取得して true/false を返す。
+ * @param {string} area
+ * @param {string} place
+ * @returns {Promise<boolean|null>} is_active の値、存在しなければ null
+ */
+async function fetchActionStatus(area, place) {
+  if (!supabase) return null;
+  if (!area || !place) return null;
+  try {
+    const { data, error } = await supabase
+      .from('action_status')
+      .select('is_active')
+      .eq('area_name', area)
+      .eq('place_name', place)
+      .single();
+    if (error) {
+      console.warn('fetchActionStatus: データ取得エラー', error);
+      return null;
+    }
+    return data ? !!data.is_active : null;
+  } catch (err) {
+    console.error('fetchActionStatus で例外:', err);
+    return null;
+  }
+}
+
 // Fallback データ。Supabase が利用できない場合に使用します。
 // 各カードは id、title、sections を持ち、sections の中には
 // name と tasks もしくは items が含まれます。task の type に応じて
@@ -600,7 +665,11 @@ function showAreaSelect() {
   btn.textContent = '南山田地区';
   btn.style.fontSize = '1.2rem';
   btn.style.padding = '1rem 2rem';
-  btn.addEventListener('click', showPlaceSelect);
+  btn.addEventListener('click', () => {
+    // 地区を選択
+    CURRENT_AREA = '南山田地区';
+    showPlaceSelect();
+  });
   areaDiv.appendChild(btn);
   container.appendChild(areaDiv);
 }
@@ -633,6 +702,8 @@ function showPlaceSelect() {
   btn.style.fontSize = '1.2rem';
   btn.style.padding = '1rem 2rem';
   btn.addEventListener('click', () => {
+    // 地区・場所を設定
+    CURRENT_PLACE = '南山田小学校';
     // タブUIを必ず表示し、指揮者用カード画面に遷移
     document.getElementById('tabs').style.display = '';
     showActionCard('commander', '指揮者用カード');
@@ -682,10 +753,17 @@ function showActionCard(cardId, cardLabel) {
   toggle.style.transform = 'scale(1.25)';
   toggle.style.marginRight = '0.6em';
   toggle.id = 'start-action-toggle';
+  // デフォルトは localStorage。Supabase が有効なら上書きして最新状態を取得する。
   toggle.checked = window.localStorage.getItem('action_started') === '1';
-  toggle.addEventListener('change', (e) => {
+  (async () => {
+    const active = await fetchActionStatus(CURRENT_AREA, CURRENT_PLACE);
+    if (active !== null) {
+      toggle.checked = !!active;
+    }
+  })();
+  toggle.addEventListener('change', async (e) => {
     window.localStorage.setItem('action_started', e.target.checked ? '1' : '0');
-    // TODO: Supabaseに状態保存/反映
+    await upsertActionStatus(CURRENT_AREA, CURRENT_PLACE, e.target.checked);
   });
   toggleLabel.appendChild(toggle);
   toggleLabel.appendChild(document.createTextNode('アクションカードを開始する'));
