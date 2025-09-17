@@ -672,6 +672,13 @@ function showAreaSelect() {
   btn.textContent = '南山田地区';
   btn.style.fontSize = '1.2rem';
   btn.style.padding = '1rem 2rem';
+  // 初期はハイライトをしていないが、Supabase と連携している場合は地区単位で判断する
+  (async () => {
+    const active = await fetchActionStatus('南山田地区', '');
+    if (active) {
+      btn.style.background = '#ffef99';
+    }
+  })();
   btn.addEventListener('click', () => {
     // 地区を選択
     CURRENT_AREA = '南山田地区';
@@ -708,6 +715,11 @@ function showPlaceSelect() {
   btn.textContent = '南山田小学校';
   btn.style.fontSize = '1.2rem';
   btn.style.padding = '1rem 2rem';
+  // Supabase からその場所が実施中かどうかチェックして色付け
+  (async () => {
+    const active = await fetchActionStatus(CURRENT_AREA || '南山田地区', '南山田小学校');
+    if (active) btn.style.background = '#ffef99';
+  })();
   btn.addEventListener('click', () => {
     // 地区・場所を設定
     CURRENT_PLACE = '南山田小学校';
