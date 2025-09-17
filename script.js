@@ -5,10 +5,18 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// Supabase の URL と anon キーを localStorage から取得します。
-// 設定していない場合は空文字列になるため、Supabase は無効になります。
-const SUPABASE_URL = window.localStorage.getItem('supabaseUrl') || '';
-const SUPABASE_ANON_KEY = window.localStorage.getItem('supabaseAnonKey') || '';
+// Supabase の URL と anon キーを以下の順で取得します:
+// 1) `window.SUPABASE_URL` / `window.SUPABASE_ANON_KEY` (deploy 時に生成された config.js から注入)
+// 2) localStorage (ローカル検証用)
+// 設定がない場合は空文字列になり Supabase は無効になります。
+const SUPABASE_URL = (window.SUPABASE_URL) ? window.SUPABASE_URL : (window.localStorage.getItem('supabaseUrl') || '');
+const SUPABASE_ANON_KEY = (window.SUPABASE_ANON_KEY) ? window.SUPABASE_ANON_KEY : (window.localStorage.getItem('supabaseAnonKey') || '');
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.info('Supabase 未設定: ブラウザで localStorage に supabaseUrl/supabaseAnonKey を設定するか、deploy 時に config.js を生成してください.');
+} else {
+  console.info('Supabase 設定を読み込みました (URL と anon key が設定されています).');
+}
 
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_ANON_KEY) {
