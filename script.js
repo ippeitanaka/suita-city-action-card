@@ -103,6 +103,97 @@ async function fetchActionStatus(area, place) {
 // name と tasks もしくは items が含まれます。task の type に応じて
 // 適切な入力フォームが生成されます。
 const fallbackCards = {
+  hq_supplies: {
+    id: 'hq_supplies',
+    title: '総本部 4 携行備品',
+    sections: [
+      {
+        name: '携行品・常備品チェックリスト',
+        items: [
+          { id: 'mobile_battery', name: 'モバイルバッテリー' },
+          { id: 'wrap', name: 'ラップ' },
+          { id: 'flashlight', name: '懐中電灯' },
+          { id: 'transceiver', name: 'トランシーバー（チャンネル7）' },
+          { id: 'gloves', name: '手袋' },
+          { id: 'lantern', name: 'ランタン' },
+          { id: 'magic_pen', name: 'マジックペン' },
+          { id: 'radio', name: 'ラジオ' },
+          { id: 'copy_paper', name: 'コピー用紙 A4 500枚' },
+          { id: 'master_key', name: 'マスターキー（非常用）' },
+          { id: 'emergency_key', name: '非常物資倉庫カギ' },
+          { id: 'notebook_pc', name: 'ノートパソコン' },
+          { id: 'dry_batteries', name: '乾電池' },
+          { id: 'ipad', name: 'iPad' },
+          { id: 'portable_battery', name: 'ポータブルバッテリー' }
+        ]
+      },
+      {
+        name: 'メモ',
+        tasks: [
+          { id: 'memo', description: '備考・メモ', type: 'text', value: '' }
+        ]
+      }
+    ]
+  },
+  hq_info_report: {
+    id: 'hq_info_report',
+    title: '総本部 5 情報収集・報告',
+    sections: [
+      {
+        name: '情報収集',
+        tasks: [
+          { id: 'injured_status', description: '負傷者の状況', type: 'text', value: '' },
+          { id: 'building_damage', description: '建物被害の状況', type: 'text', value: '' },
+          { id: 'communication', description: '通信可否', type: 'choice', options: ['可', '不可'], value: '' },
+          { id: 'internet_info', description: 'ネット・SNS等の情報', type: 'text', value: '' }
+        ]
+      },
+      {
+        name: '危機管理室への報告',
+        tasks: [
+          { id: 'report_to_office', description: '危機管理室（06-6384-1753）へ報告した', type: 'boolean', value: false },
+          { id: 'memo', description: '備考・メモ', type: 'text', value: '' }
+        ]
+      }
+    ]
+  },
+  secondary_disaster: {
+    id: 'secondary_disaster',
+    title: '二次災害防止 6',
+    sections: [
+      {
+        name: '建物被害チェック',
+        tasks: [
+          { id: 'wall_floor_ceiling', description: '壁・床・天井・窓の被害確認', type: 'boolean', value: false },
+          { id: 'pillar_deform', description: '柱の変形/破断の有無', type: 'boolean', value: false },
+          { id: 'memo1', description: '被害状況メモ', type: 'text', value: '' }
+        ]
+      },
+      {
+        name: 'ライフライン・火災',
+        tasks: [
+          { id: 'lifeline_stop', description: '電気・ガス・水道の停止確認', type: 'boolean', value: false },
+          { id: 'fire_reference', description: '火災時の参考手順（火災発生対応カード参照）', type: 'boolean', value: false },
+          { id: 'memo2', description: '備考・メモ', type: 'text', value: '' }
+        ]
+      }
+    ]
+  },
+  open_chat: {
+    id: 'open_chat',
+    title: 'オープンチャット 7',
+    sections: [
+      {
+        name: '運用原則',
+        tasks: [
+          { id: 'who_sends', description: '誰が配信するか（担当者・リーダー等）', type: 'text', value: '' },
+          { id: 'priority_info', description: '優先配信事項（火災・受け入れ開始・市からの情報など）', type: 'text', value: '' },
+          { id: 'template', description: '配信テンプレ例：「現在○○で火災〜」など', type: 'text', value: '' },
+          { id: 'memo', description: '備考・メモ', type: 'text', value: '' }
+        ]
+      }
+    ]
+  },
   commander: {
     id: 'commander',
     title: '指揮者用カード',
