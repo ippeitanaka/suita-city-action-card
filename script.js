@@ -856,7 +856,56 @@ async function renderCard(cardId) {
     (section.tasks || []).forEach((task, taskIdx) => {
       // type:labelはスキップ（配信例はul/liで描画済み）
       if (task.type === 'label') return;
-      // ...existing code...
+      const taskDiv = document.createElement('div');
+      taskDiv.className = 'task';
+      if (task.type === 'boolean') {
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!task.value;
+        cb.disabled = true; // 編集不可（必要に応じて外す）
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(task.description));
+        taskDiv.appendChild(label);
+      } else if (task.type === 'text') {
+        const label = document.createElement('label');
+        label.textContent = task.description;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = task.value || '';
+        input.disabled = true; // 編集不可（必要に応じて外す）
+        taskDiv.appendChild(label);
+        taskDiv.appendChild(input);
+      } else if (task.type === 'number') {
+        const label = document.createElement('label');
+        label.textContent = task.description;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = task.value || '';
+        input.disabled = true;
+        taskDiv.appendChild(label);
+        taskDiv.appendChild(input);
+      } else if (task.type === 'choice' && Array.isArray(task.options)) {
+        const label = document.createElement('label');
+        label.textContent = task.description;
+        const select = document.createElement('select');
+        select.disabled = true;
+        task.options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          if (task.value === opt) option.selected = true;
+          select.appendChild(option);
+        });
+        taskDiv.appendChild(label);
+        taskDiv.appendChild(select);
+      } else {
+        // 未対応typeはdescriptionのみ表示
+        const span = document.createElement('span');
+        span.textContent = task.description;
+        taskDiv.appendChild(span);
+      }
+      sectionDiv.appendChild(taskDiv);
     });
     container.appendChild(sectionDiv);
   });
