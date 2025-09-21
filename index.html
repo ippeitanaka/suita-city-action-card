@@ -276,10 +276,19 @@
 
       /* チェックボックス・ラジオボタンを大きく */
       input[type="checkbox"], input[type="radio"] {
-        width: 2em;
-        height: 2em;
+        width: 2.7em;
+        height: 2.7em;
         accent-color: #2563eb;
-        margin-right: 0.7em;
+        margin-right: 1em;
+        border-radius: 0.5em;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.10);
+        cursor: pointer;
+        vertical-align: middle;
+        transition: box-shadow 0.2s, border 0.2s;
+      }
+      input[type="checkbox"]:active, input[type="radio"]:active {
+        box-shadow: 0 1px 4px rgba(37,99,235,0.18);
+        border: 2px solid #2563eb;
       }
 
       select {
