@@ -1,3 +1,152 @@
+// --- Supabaseでカード入力値を保存・共有する仕組みを追加 ---
+/**
+ * カードの入力状態（チェック・テキスト等）をSupabase card_statesテーブルに保存
+ * @param {string} cardId
+ * @param {object} stateObj - { taskId: 値, ... }
+ */
+async function saveCardState(cardId, stateObj) {
+  if (!supabase || !CURRENT_AREA || !CURRENT_PLACE) return;
+  try {
+    await supabase.from('card_states').upsert({
+      area: CURRENT_AREA,
+      facility: CURRENT_PLACE,
+      card_id: cardId,
+      state: stateObj,
+      updated_at: new Date().toISOString()
+    }, { onConflict: ['area', 'facility', 'card_id'] });
+  } catch (err) {
+    console.error('saveCardState error:', err);
+  }
+}
+
+/**
+ * Supabaseからカードの入力状態を取得
+ * @param {string} cardId
+ * @returns {Promise<object|null>} { taskId: 値, ... } or null
+ */
+async function loadCardState(cardId) {
+  if (!supabase || !CURRENT_AREA || !CURRENT_PLACE) return null;
+  try {
+    const { data, error } = await supabase
+      .from('card_states')
+      .select('state')
+      .eq('area', CURRENT_AREA)
+      .eq('facility', CURRENT_PLACE)
+      .eq('card_id', cardId)
+      .single();
+    if (error) return null;
+    return data && data.state ? data.state : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// --- renderCardのタスク描画部をSupabase同期対応に修正 ---
+async function renderCard(cardId) {
+  const container = document.getElementById('content');
+  container.textContent = '読み込み中...';
+  const card = await getCardData(cardId);
+  container.innerHTML = '';
+  if (card.richSections) {
+    renderRichSections(card, container);
+    return;
+  }
+
+  // --- ここからSupabase状態の取得 ---
+  let supaState = await loadCardState(cardId);
+  if (!supaState) supaState = {};
+
+  // セクションを1つずつ描画
+  (card.sections || []).forEach((section, secIdx) => {
+    const sectionDiv = document.createElement('div');
+    sectionDiv.className = 'section';
+    const header = document.createElement('h2');
+    header.textContent = section.name;
+    sectionDiv.appendChild(header);
+
+    (section.tasks || []).forEach((task, taskIdx) => {
+      const taskDiv = document.createElement('div');
+      taskDiv.className = 'task';
+      const label = document.createElement('label');
+      label.textContent = task.description;
+      label.htmlFor = `${cardId}_${secIdx}_${task.id}`;
+      taskDiv.appendChild(label);
+      let input;
+      // --- 入力値はSupabaseの状態で上書き ---
+      let value = supaState[task.id];
+      if (value === undefined) value = task.value;
+
+      if (task.type === 'boolean') {
+        input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = value === true;
+        input.addEventListener('change', async (e) => {
+          supaState[task.id] = e.target.checked;
+          await saveCardState(cardId, supaState);
+        });
+      } else if (task.type === 'choice') {
+        input = document.createElement('select');
+        task.options.forEach((opt) => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          if (value === opt) option.selected = true;
+          input.appendChild(option);
+        });
+        input.addEventListener('change', async (e) => {
+          supaState[task.id] = e.target.value;
+          await saveCardState(cardId, supaState);
+        });
+      } else if (task.type === 'number') {
+        input = document.createElement('input');
+        input.type = 'number';
+        input.value = value || '';
+        input.addEventListener('change', async (e) => {
+          supaState[task.id] = e.target.value;
+          await saveCardState(cardId, supaState);
+        });
+      } else if (task.type === 'text') {
+        input = document.createElement('textarea');
+        input.rows = 2;
+        input.value = value || '';
+        input.addEventListener('change', async (e) => {
+          supaState[task.id] = e.target.value;
+          await saveCardState(cardId, supaState);
+        });
+      } else if (task.type === 'label') {
+        input = document.createElement('span');
+        input.textContent = task.description;
+      }
+      input.id = `${cardId}_${secIdx}_${task.id}`;
+      taskDiv.appendChild(input);
+      sectionDiv.appendChild(taskDiv);
+    });
+    container.appendChild(sectionDiv);
+  });
+
+  // --- Supabaseリアルタイム反映 ---
+  if (supabase && CURRENT_AREA && CURRENT_PLACE) {
+    // チャンネル名はarea/facility/card_idでユニークに
+    const channel = supabase.channel(`card_states_${CURRENT_AREA}_${CURRENT_PLACE}_${cardId}`);
+    channel
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'card_states',
+          filter: `area=eq.${CURRENT_AREA},facility=eq.${CURRENT_PLACE},card_id=eq.${cardId}`
+        },
+        (payload) => {
+          // 他ユーザーの変更も即時反映
+          if (payload.new && payload.new.state) {
+            renderCard(cardId);
+          }
+        }
+      )
+      .subscribe();
+  }
+}
 // --- faithful差し替えロジック（4 携行備品・5 情報収集・報告） ---
 (function applyFaithfulCards() {
   const carryingItemsRich = {
@@ -118,201 +267,156 @@ function renderRichSections(card, container) {
     }
     (section.blocks || []).forEach(block => {
       if (block.type === 'raw') {
-        const p = document.createElement('pre');
-        p.textContent = block.text;
-        p.className = 'mono';
-        secDiv.appendChild(p);
-      } else if (block.type === 'check') {
-        const label = document.createElement('label');
-        label.style.display = 'block';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.style.marginRight = '0.7em';
-        label.appendChild(cb);
-        label.appendChild(document.createTextNode(block.text));
-        secDiv.appendChild(label);
-      } else if (block.type === 'field') {
-        const fieldDiv = document.createElement('div');
-        fieldDiv.style.margin = '0.7em 0';
-        const label = document.createElement('label');
-        label.textContent = block.label || '';
-        label.style.marginRight = '0.7em';
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = block.value || '';
-        input.style.minWidth = '200px';
-        fieldDiv.appendChild(label);
-        fieldDiv.appendChild(input);
-        secDiv.appendChild(fieldDiv);
-      }
-    });
-    container.appendChild(secDiv);
-  });
-}
-// action_card_app/script.js
-// テスト版の災害時アクションカードアプリのメインスクリプトです。
-// Supabase を利用してカードデータを保存・取得しますが、Supabase が
-// 未設定の場合は下記の fallbackCards を利用します。
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        // --- Supabaseでカード入力値を保存・共有する仕組みを追加 ---
+        /**
+         * カードの入力状態（チェック・テキスト等）をSupabase card_statesテーブルに保存
+         * @param {string} cardId
+         * @param {object} stateObj - { taskId: 値, ... }
+         */
+        async function saveCardState(cardId, stateObj) {
+          if (!supabase || !CURRENT_AREA || !CURRENT_PLACE) return;
+          try {
+            await supabase.from('card_states').upsert({
+              area: CURRENT_AREA,
+              facility: CURRENT_PLACE,
+              card_id: cardId,
+              state: stateObj,
+              updated_at: new Date().toISOString()
+            }, { onConflict: ['area', 'facility', 'card_id'] });
+          } catch (err) {
+            console.error('saveCardState error:', err);
+          }
+        }
 
-// Supabase の URL と anon キーを以下の順で取得します:
-// 1) `window.SUPABASE_URL` / `window.SUPABASE_ANON_KEY` (deploy 時に生成された config.js から注入)
-// 2) localStorage (ローカル検証用)
-// 設定がない場合は空文字列になり Supabase は無効になります。
-const SUPABASE_URL = (window.SUPABASE_URL) ? window.SUPABASE_URL : (window.localStorage.getItem('supabaseUrl') || '');
-const SUPABASE_ANON_KEY = (window.SUPABASE_ANON_KEY) ? window.SUPABASE_ANON_KEY : (window.localStorage.getItem('supabaseAnonKey') || '');
+        /**
+         * Supabaseからカードの入力状態を取得
+         * @param {string} cardId
+         * @returns {Promise<object|null>} { taskId: 値, ... } or null
+         */
+        async function loadCardState(cardId) {
+          if (!supabase || !CURRENT_AREA || !CURRENT_PLACE) return null;
+          try {
+            const { data, error } = await supabase
+              .from('card_states')
+              .select('state')
+              .eq('area', CURRENT_AREA)
+              .eq('facility', CURRENT_PLACE)
+              .eq('card_id', cardId)
+              .single();
+            if (error) return null;
+            return data && data.state ? data.state : null;
+          } catch (err) {
+            return null;
+          }
+        }
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.info('Supabase 未設定: ブラウザで localStorage に supabaseUrl/supabaseAnonKey を設定するか、deploy 時に config.js を生成してください.');
-} else {
-  console.info('Supabase 設定を読み込みました (URL と anon key が設定されています).');
-}
+        // --- renderCardのタスク描画部をSupabase同期対応に修正 ---
+        async function renderCard(cardId) {
+          const container = document.getElementById('content');
+          container.textContent = '読み込み中...';
+          const card = await getCardData(cardId);
+          container.innerHTML = '';
+          if (card.richSections) {
+            renderRichSections(card, container);
+            return;
+          }
 
-let supabase = null;
-if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-  try {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch (e) {
-    console.warn('Supabase の初期化に失敗しました。Fallback データを使用します。', e);
-  }
-}
+          // --- ここからSupabase状態の取得 ---
+          let supaState = await loadCardState(cardId);
+          if (!supaState) supaState = {};
 
-// 現在選択中の地区・場所を保持（Supabase に状態を保存する際に使用）
-let CURRENT_AREA = '';
-let CURRENT_PLACE = '';
+          // セクションを1つずつ描画
+          (card.sections || []).forEach((section, secIdx) => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section';
+            const header = document.createElement('h2');
+            header.textContent = section.name;
+            sectionDiv.appendChild(header);
 
-/**
- * action_status を upsert して他ユーザーと共有できるようにする。
- * テーブルは Supabase 側であらかじめ作成しておく前提。
- * @param {string} area
- * @param {string} place
- * @param {boolean} isActive
- */
-async function upsertActionStatus(area, place, isActive) {
-  if (!supabase) {
-    console.info('Supabase 未設定のため action_status の保存をスキップします');
-    return;
-  }
-  if (!area) {
-    console.warn('upsertActionStatus: area が未設定です', area, place);
-    return;
-  }
-  try {
-    const payload = {
-      area_name: area,
-      place_name: place || '',
-      is_active: isActive,
-      updated_at: new Date().toISOString(),
-    };
-    // onConflict の列は Supabase 側でユニーク制約が設定されている想定
-    console.info('upsertActionStatus: payload=', payload);
-    const { data, error } = await supabase
-      .from('action_status')
-      .upsert(payload, { onConflict: ['area_name', 'place_name'] });
-    if (error) console.error('action_status upsert エラー:', error);
-    else console.info('action_status upsert 成功', data);
-  } catch (err) {
-    console.error('upsertActionStatus で例外:', err);
-  }
-}
+            (section.tasks || []).forEach((task, taskIdx) => {
+              const taskDiv = document.createElement('div');
+              taskDiv.className = 'task';
+              const label = document.createElement('label');
+              label.textContent = task.description;
+              label.htmlFor = `${cardId}_${secIdx}_${task.id}`;
+              taskDiv.appendChild(label);
+              let input;
+              // --- 入力値はSupabaseの状態で上書き ---
+              let value = supaState[task.id];
+              if (value === undefined) value = task.value;
 
-/**
- * 指定した地区・場所の action_status を取得して true/false を返す。
- * @param {string} area
- * @param {string} place
- * @returns {Promise<boolean|null>} is_active の値、存在しなければ null
- */
-async function fetchActionStatus(area, place) {
-  if (!supabase) return null;
-  if (!area) return null;
-  try {
-    let query = supabase.from('action_status').select('is_active');
-    query = query.eq('area_name', area);
-    if (place && place !== '') {
-      query = query.eq('place_name', place);
-    } else {
-      // place が空なら place_name が空文字または NULL のレコードを探す
-      query = query.or(`place_name.eq.'' , place_name.is.null`);
-    }
-    // 単一レコード想定のため single を試みる
-    const { data, error } = await query.single();
-    if (error) {
-      console.warn('fetchActionStatus: データ取得エラー', error);
-      return null;
-    }
-    console.info('fetchActionStatus: result=', data);
-    return data ? !!data.is_active : null;
-  } catch (err) {
-    console.error('fetchActionStatus で例外:', err);
-    return null;
-  }
-}
+              if (task.type === 'boolean') {
+                input = document.createElement('input');
+                input.type = 'checkbox';
+                input.checked = value === true;
+                input.addEventListener('change', async (e) => {
+                  supaState[task.id] = e.target.checked;
+                  await saveCardState(cardId, supaState);
+                });
+              } else if (task.type === 'choice') {
+                input = document.createElement('select');
+                task.options.forEach((opt) => {
+                  const option = document.createElement('option');
+                  option.value = opt;
+                  option.textContent = opt;
+                  if (value === opt) option.selected = true;
+                  input.appendChild(option);
+                });
+                input.addEventListener('change', async (e) => {
+                  supaState[task.id] = e.target.value;
+                  await saveCardState(cardId, supaState);
+                });
+              } else if (task.type === 'number') {
+                input = document.createElement('input');
+                input.type = 'number';
+                input.value = value || '';
+                input.addEventListener('change', async (e) => {
+                  supaState[task.id] = e.target.value;
+                  await saveCardState(cardId, supaState);
+                });
+              } else if (task.type === 'text') {
+                input = document.createElement('textarea');
+                input.rows = 2;
+                input.value = value || '';
+                input.addEventListener('change', async (e) => {
+                  supaState[task.id] = e.target.value;
+                  await saveCardState(cardId, supaState);
+                });
+              } else if (task.type === 'label') {
+                input = document.createElement('span');
+                input.textContent = task.description;
+              }
+              input.id = `${cardId}_${secIdx}_${task.id}`;
+              taskDiv.appendChild(input);
+              sectionDiv.appendChild(taskDiv);
+            });
+            container.appendChild(sectionDiv);
+          });
 
-// Fallback データ。Supabase が利用できない場合に使用します。
-// 各カードは id、title、sections を持ち、sections の中には
-// name と tasks もしくは items が含まれます。task の type に応じて
-// 適切な入力フォームが生成されます。
-const fallbackCards = {
-  hq_supplies: {
-    id: 'hq_supplies',
-    title: '総本部 4 携行備品',
-    sections: [
-      {
-        name: '携行品・常備品チェックリスト',
-        tasks: [
-          { id: 'mobile_battery', description: 'モバイルバッテリー', type: 'boolean', value: false },
-          { id: 'wrap', description: 'ラップ', type: 'boolean', value: false },
-          { id: 'flashlight', description: '懐中電灯', type: 'boolean', value: false },
-          { id: 'transceiver', description: 'トランシーバー（チャンネル7）', type: 'boolean', value: false },
-          { id: 'gloves', description: '手袋', type: 'boolean', value: false },
-          { id: 'lantern', description: 'ランタン', type: 'boolean', value: false },
-          { id: 'magic_pen', description: 'マジックペン', type: 'boolean', value: false },
-          { id: 'radio', description: 'ラジオ', type: 'boolean', value: false },
-          { id: 'copy_paper', description: 'コピー用紙 A4 500枚', type: 'boolean', value: false },
-          { id: 'master_key', description: 'マスターキー（非常用）', type: 'boolean', value: false },
-          { id: 'emergency_key', description: '非常物資倉庫カギ', type: 'boolean', value: false },
-          { id: 'notebook_pc', description: 'ノートパソコン', type: 'boolean', value: false },
-          { id: 'dry_batteries', description: '乾電池', type: 'boolean', value: false },
-          { id: 'ipad', description: 'iPad', type: 'boolean', value: false },
-          { id: 'portable_battery', description: 'ポータブルバッテリー', type: 'boolean', value: false }
-        ]
-      },
-      {
-        name: 'メモ',
-        tasks: [
-          { id: 'memo', description: '備考・メモ', type: 'text', value: '' }
-        ]
-      }
-    ]
-  },
-  hq_info_report: {
-    id: 'hq_info_report',
-    title: '総本部 5 情報収集・報告',
-    sections: [
-      {
-        name: '情報収集',
-        tasks: [
-          { id: 'injured_status', description: '負傷者の状況', type: 'text', value: '' },
-          { id: 'building_damage', description: '建物被害の状況', type: 'text', value: '' },
-          { id: 'communication', description: '通信可否', type: 'choice', options: ['可', '不可'], value: '' },
-          { id: 'internet_info', description: 'ネット・SNS等の情報', type: 'text', value: '' }
-        ]
-      },
-      {
-        name: '危機管理室への報告',
-        tasks: [
-          { id: 'report_to_office', description: '危機管理室（06-6384-1753）へ報告した', type: 'boolean', value: false },
-          { id: 'memo', description: '備考・メモ', type: 'text', value: '' }
-        ]
-      }
-    ]
-  },
-  secondary_disaster: {
-    id: 'secondary_disaster',
-    title: '二次災害防止 6',
-    sections: [
-      {
+          // --- Supabaseリアルタイム反映 ---
+          if (supabase && CURRENT_AREA && CURRENT_PLACE) {
+            // チャンネル名はarea/facility/card_idでユニークに
+            const channel = supabase.channel(`card_states_${CURRENT_AREA}_${CURRENT_PLACE}_${cardId}`);
+            channel
+              .on(
+                'postgres_changes',
+                {
+                  event: '*',
+                  schema: 'public',
+                  table: 'card_states',
+                  filter: `area=eq.${CURRENT_AREA},facility=eq.${CURRENT_PLACE},card_id=eq.${cardId}`
+                },
+                (payload) => {
+                  // 他ユーザーの変更も即時反映
+                  if (payload.new && payload.new.state) {
+                    renderCard(cardId);
+                  }
+                }
+              )
+              .subscribe();
+          }
+        }
         name: '建物被害チェック',
         tasks: [
           { id: 'wall_floor_ceiling', description: '壁・床・天井・窓の被害確認', type: 'boolean', value: false },
