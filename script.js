@@ -1,5 +1,19 @@
 // --- Supabaseでカード入力値を保存・共有する仕組みを追加 ---
 
+/**
+ * カードIDからカードデータを取得（現状はfallbackCardsのみ）
+ * @param {string} cardId
+ * @returns {Promise<object>} カードデータ
+ */
+async function getCardData(cardId) {
+  // 将来的にSupabaseから取得する場合はここで分岐
+  if (window.fallbackCards && window.fallbackCards[cardId]) {
+    return window.fallbackCards[cardId];
+  }
+  // fallbackCardsがなければ空オブジェクト
+  return {};
+}
+
 // グローバル変数: 地域・場所
 let CURRENT_AREA = '';
 let CURRENT_PLACE = '';
