@@ -342,6 +342,23 @@ const fallbackCards = {
           { id: 'template', description: '配信テンプレ例：「現在○○で火災〜」など', type: 'text', value: '' },
           { id: 'memo', description: '備考・メモ', type: 'text', value: '' }
         ]
+      },
+      {
+        name: '配信例',
+        tasks: [
+          { id: 'example1', description: '先ほど発生した地震に関する情報や今後の対応については随時配信でお知らせします。', type: 'label' },
+          { id: 'example2', description: '現在、○○で火災が発生しています。南山田小学校のグラウンドへ避難してください。煙 が出ているときは、ハンカチなどで口と鼻を塞いで、身体を低くして避難してください', type: 'label' },
+          { id: 'example3', description: '今回の地震による避難所の被害は現在のところ確認されておりません', type: 'label' },
+          { id: 'example4', description: 'ガラスの割れや棚の転倒が確認されています。十分に気をつけてください。', type: 'label' },
+          { id: 'example5', description: '火災の発生は確認されていません。', type: 'label' },
+          { id: 'example6', description: '先ほど発生した地震(災害)に伴い、南山田小学校の避難所が開設されました。', type: 'label' },
+          { id: 'example7', description: '今後、余震が発生する可能性がありますので、移動の際は十分注意してください。', type: 'label' },
+          { id: 'example8', description: 'エレベーターは使用せず、階段などを利用してください。閉じ込められる恐れがあります。', type: 'label' },
+          { id: 'example9', description: '今回発生した地震の震度は○・震源地は○○・この地震による津波の発生は心配ありません。', type: 'label' },
+          { id: 'example10', description: '今回の地震では大津波警報が発表されており、○分後に○mを超える津波が予想されています。建物の3階以上に避難してください。', type: 'label' },
+          { id: 'example11', description: '南山田小学校の損傷が大きく、このまま校舎内に留まることは危険をともなうため、山田中学校など、他の避難所に避難してください。', type: 'label' },
+          { id: 'example12', description: '携帯電話や SNS が繋がる場合は、ご家族などに各自安否報告をおこなってください。携帯電話による通話がつながりにくい場合は、SNS での連絡を試みてください。', type: 'label' }
+        ]
       }
     ]
   },
