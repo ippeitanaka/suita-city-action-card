@@ -65,6 +65,9 @@ async function renderCard(cardId) {
     sectionDiv.appendChild(header);
 
     (section.tasks || []).forEach((task, taskIdx) => {
+      // 配信例セクション（titleに「配信例」を含む）はlabel型のみテキスト表示、それ以外は入力欄を描画しない
+      const isHaishinrei = section.name && section.name.includes('配信例');
+      if (isHaishinrei && task.type !== 'label') return;
       const taskDiv = document.createElement('div');
       taskDiv.className = 'task';
       const label = document.createElement('label');
@@ -117,8 +120,10 @@ async function renderCard(cardId) {
         input = document.createElement('span');
         input.textContent = task.description;
       }
-      input.id = `${cardId}_${secIdx}_${task.id}`;
-      taskDiv.appendChild(input);
+      if (input) {
+        input.id = `${cardId}_${secIdx}_${task.id}`;
+        taskDiv.appendChild(input);
+      }
       sectionDiv.appendChild(taskDiv);
     });
     container.appendChild(sectionDiv);
@@ -416,7 +421,17 @@ function renderRichSections(card, container) {
               )
               .subscribe();
           }
+
         }
+      }
+// --- ここまで ---
+
+const fallbackCards = {
+  secondary_disaster: {
+    id: 'secondary_disaster',
+    title: '二次災害防止 6',
+    sections: [
+      {
         name: '建物被害チェック',
         tasks: [
           { id: 'wall_floor_ceiling', description: '壁・床・天井・窓の被害確認', type: 'boolean', value: false },
