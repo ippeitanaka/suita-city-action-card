@@ -823,92 +823,193 @@ async function renderCard(cardId) {
     container.appendChild(metaDiv);
   }
   // セクションを1つずつ描画
-  (card.sections || []).forEach((section, secIdx) => {
-    const sectionDiv = document.createElement('div');
-    sectionDiv.className = 'section';
-    const header = document.createElement('h2');
-    header.textContent = section.name;
-    sectionDiv.appendChild(header);
-    // 配信例セクション（tasks内type:labelのみ）の場合はul/liで表示
-    if (section.name && section.name.includes('配信例')) {
-      const labelTasks = (section.tasks || []).filter(t => t.type === 'label');
-      if (labelTasks.length > 0) {
-        const ul = document.createElement('ul');
-        ul.style.listStyle = 'disc';
-        ul.style.paddingLeft = '2em';
-        ul.style.margin = '0.5em 0 1.5em 0';
-        labelTasks.forEach(task => {
-          const li = document.createElement('li');
-          li.textContent = task.description;
-          li.style.margin = '0.3em 0';
-          ul.appendChild(li);
-        });
-        sectionDiv.appendChild(ul);
-        container.appendChild(sectionDiv);
-        return;
+    (card.sections || []).forEach((section, secIdx) => {
+      const sectionDiv = document.createElement('div');
+      sectionDiv.className = 'section';
+      sectionDiv.style.position = 'relative';
+      // セクション削除ボタン
+      const delSecBtn = document.createElement('button');
+      delSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M6 8v6m4-6v6m4-6v6M3 6h14M5 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="6" width="16" height="12" rx="2" stroke="#888" stroke-width="1.5"/></svg>';
+      delSecBtn.title = 'セクション削除';
+      delSecBtn.style.position = 'absolute';
+      delSecBtn.style.top = '0.7em';
+      delSecBtn.style.right = '0.7em';
+      delSecBtn.style.background = 'transparent';
+      delSecBtn.style.border = 'none';
+      delSecBtn.style.cursor = 'pointer';
+      delSecBtn.style.opacity = '0.6';
+      delSecBtn.onmouseover = () => delSecBtn.style.opacity = '1';
+      delSecBtn.onmouseout = () => delSecBtn.style.opacity = '0.6';
+      delSecBtn.onclick = async () => {
+        if (!confirm('このセクションを削除しますか？')) return;
+        card.sections.splice(secIdx, 1);
+        await updateCardSections(cardId, card.sections);
+        renderCard(cardId);
+      };
+      sectionDiv.appendChild(delSecBtn);
+      // セクション編集ボタン
+      const editSecBtn = document.createElement('button');
+      editSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.5" stroke-linecap="round"/></svg>';
+      editSecBtn.title = 'セクション名編集';
+      editSecBtn.style.position = 'absolute';
+      editSecBtn.style.top = '0.7em';
+      editSecBtn.style.right = '2.5em';
+      editSecBtn.style.background = 'transparent';
+      editSecBtn.style.border = 'none';
+      editSecBtn.style.cursor = 'pointer';
+      editSecBtn.style.opacity = '0.7';
+      editSecBtn.onmouseover = () => editSecBtn.style.opacity = '1';
+      editSecBtn.onmouseout = () => editSecBtn.style.opacity = '0.7';
+      editSecBtn.onclick = async () => {
+        const newName = prompt('新しいセクション名を入力してください', section.name);
+        if (newName && newName.trim() !== section.name) {
+          section.name = newName.trim();
+          await updateCardSections(cardId, card.sections);
+          renderCard(cardId);
+        }
+      };
+      sectionDiv.appendChild(editSecBtn);
+      const header = document.createElement('h2');
+      header.textContent = section.name;
+      sectionDiv.appendChild(header);
+      // 配信例セクション（tasks内type:labelのみ）の場合はul/liで表示
+      if (section.name && section.name.includes('配信例')) {
+        const labelTasks = (section.tasks || []).filter(t => t.type === 'label');
+        if (labelTasks.length > 0) {
+          const ul = document.createElement('ul');
+          ul.style.listStyle = 'disc';
+          ul.style.paddingLeft = '2em';
+          ul.style.margin = '0.5em 0 1.5em 0';
+          labelTasks.forEach(task => {
+            const li = document.createElement('li');
+            li.textContent = task.description;
+            li.style.margin = '0.3em 0';
+            ul.appendChild(li);
+          });
+          sectionDiv.appendChild(ul);
+          container.appendChild(sectionDiv);
+          return;
+        }
       }
-    }
-    // 装備品リストの場合
-    if (section.items) {
-      // ...existing code...
-    }
-    // タスクを描画
-    (section.tasks || []).forEach((task, taskIdx) => {
-      // type:labelはスキップ（配信例はul/liで描画済み）
-      if (task.type === 'label') return;
-      const taskDiv = document.createElement('div');
-      taskDiv.className = 'task';
-      if (task.type === 'boolean') {
-        const label = document.createElement('label');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = !!task.value;
-        cb.disabled = true; // 編集不可（必要に応じて外す）
-        label.appendChild(cb);
-        label.appendChild(document.createTextNode(task.description));
-        taskDiv.appendChild(label);
-      } else if (task.type === 'text') {
-        const label = document.createElement('label');
-        label.textContent = task.description;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = task.value || '';
-        input.disabled = true; // 編集不可（必要に応じて外す）
-        taskDiv.appendChild(label);
-        taskDiv.appendChild(input);
-      } else if (task.type === 'number') {
-        const label = document.createElement('label');
-        label.textContent = task.description;
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.value = task.value || '';
-        input.disabled = true;
-        taskDiv.appendChild(label);
-        taskDiv.appendChild(input);
-      } else if (task.type === 'choice' && Array.isArray(task.options)) {
-        const label = document.createElement('label');
-        label.textContent = task.description;
-        const select = document.createElement('select');
-        select.disabled = true;
-        task.options.forEach(opt => {
-          const option = document.createElement('option');
-          option.value = opt;
-          option.textContent = opt;
-          if (task.value === opt) option.selected = true;
-          select.appendChild(option);
-        });
-        taskDiv.appendChild(label);
-        taskDiv.appendChild(select);
-      } else {
-        // 未対応typeはdescriptionのみ表示
-        const span = document.createElement('span');
-        span.textContent = task.description;
-        taskDiv.appendChild(span);
+      // 装備品リストの場合
+      if (section.items) {
+        // ...existing code...
       }
-      sectionDiv.appendChild(taskDiv);
+      // タスクを描画
+      (section.tasks || []).forEach((task, taskIdx) => {
+        if (task.type === 'label') return;
+        const taskDiv = document.createElement('div');
+        taskDiv.className = 'task';
+        taskDiv.style.position = 'relative';
+        // タスク削除ボタン
+        const delTaskBtn = document.createElement('button');
+        delTaskBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M6 8v6m4-6v6m4-6v6M3 6h14M5 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" stroke="#888" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="6" width="16" height="12" rx="2" stroke="#888" stroke-width="1.3"/></svg>';
+        delTaskBtn.title = 'タスク削除';
+        delTaskBtn.style.position = 'absolute';
+        delTaskBtn.style.top = '0.2em';
+        delTaskBtn.style.right = '0.2em';
+        delTaskBtn.style.background = 'transparent';
+        delTaskBtn.style.border = 'none';
+        delTaskBtn.style.cursor = 'pointer';
+        delTaskBtn.style.opacity = '0.5';
+        delTaskBtn.onmouseover = () => delTaskBtn.style.opacity = '1';
+        delTaskBtn.onmouseout = () => delTaskBtn.style.opacity = '0.5';
+        delTaskBtn.onclick = async () => {
+          if (!confirm('このタスクを削除しますか？')) return;
+          section.tasks.splice(taskIdx, 1);
+          await updateCardSections(cardId, card.sections);
+          renderCard(cardId);
+        };
+        taskDiv.appendChild(delTaskBtn);
+        // タスク編集ボタン
+        const editTaskBtn = document.createElement('button');
+        editTaskBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.3" stroke-linecap="round"/></svg>';
+        editTaskBtn.title = 'タスク名編集';
+        editTaskBtn.style.position = 'absolute';
+        editTaskBtn.style.top = '0.2em';
+        editTaskBtn.style.right = '2.0em';
+        editTaskBtn.style.background = 'transparent';
+        editTaskBtn.style.border = 'none';
+        editTaskBtn.style.cursor = 'pointer';
+        editTaskBtn.style.opacity = '0.7';
+        editTaskBtn.onmouseover = () => editTaskBtn.style.opacity = '1';
+        editTaskBtn.onmouseout = () => editTaskBtn.style.opacity = '0.7';
+        editTaskBtn.onclick = async () => {
+          const newDesc = prompt('新しいタスク名を入力してください', task.description);
+          if (newDesc && newDesc.trim() !== task.description) {
+            task.description = newDesc.trim();
+            await updateCardSections(cardId, card.sections);
+            renderCard(cardId);
+          }
+        };
+        taskDiv.appendChild(editTaskBtn);
+        // ...既存のタスク描画処理...
+        if (task.type === 'boolean') {
+          const label = document.createElement('label');
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = !!task.value;
+          cb.disabled = false; // 編集可能
+          cb.addEventListener('change', async (e) => {
+            task.value = e.target.checked;
+            await updateCardSections(cardId, card.sections);
+          });
+          label.appendChild(cb);
+          label.appendChild(document.createTextNode(task.description));
+          taskDiv.appendChild(label);
+        } else if (task.type === 'text') {
+          const label = document.createElement('label');
+          label.textContent = task.description;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = task.value || '';
+          input.disabled = false; // 編集可能
+          input.addEventListener('change', async (e) => {
+            task.value = e.target.value;
+            await updateCardSections(cardId, card.sections);
+          });
+          taskDiv.appendChild(label);
+          taskDiv.appendChild(input);
+        } else if (task.type === 'number') {
+          const label = document.createElement('label');
+          label.textContent = task.description;
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.value = task.value || '';
+          input.disabled = false;
+          input.addEventListener('change', async (e) => {
+            task.value = e.target.value;
+            await updateCardSections(cardId, card.sections);
+          });
+          taskDiv.appendChild(label);
+          taskDiv.appendChild(input);
+        } else if (task.type === 'choice' && Array.isArray(task.options)) {
+          const label = document.createElement('label');
+          label.textContent = task.description;
+          const select = document.createElement('select');
+          select.disabled = false;
+          select.addEventListener('change', async (e) => {
+            task.value = e.target.value;
+            await updateCardSections(cardId, card.sections);
+          });
+          task.options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            if (task.value === opt) option.selected = true;
+            select.appendChild(option);
+          });
+          taskDiv.appendChild(label);
+          taskDiv.appendChild(select);
+        } else {
+          const span = document.createElement('span');
+          span.textContent = task.description;
+          taskDiv.appendChild(span);
+        }
+        sectionDiv.appendChild(taskDiv);
+      });
+      container.appendChild(sectionDiv);
     });
-    container.appendChild(sectionDiv);
-  });
 }
 
 // 地域・場所・カード選択・ヘッダー制御
