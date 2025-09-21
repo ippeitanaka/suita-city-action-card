@@ -733,16 +733,11 @@ function showHome() {
   // ボタン
   const btn = document.createElement('button');
   btn.textContent = '地区を選ぶ';
-  btn.style.fontSize = '1.2rem';
-  btn.style.padding = '1rem 2rem';
+  btn.className = 'big-main-btn';
   btn.style.position = 'absolute';
   btn.style.left = '50%';
   btn.style.transform = 'translateX(-50%)';
-  btn.style.bottom = '25vh';
-  btn.style.background = 'rgba(255,255,255,0.95)';
-  btn.style.border = '2px solid #333';
-  btn.style.borderRadius = '8px';
-  btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+  btn.style.bottom = '18vh';
   btn.addEventListener('click', showAreaSelect);
   imgDiv.appendChild(btn);
   container.appendChild(imgDiv);
@@ -773,17 +768,15 @@ function showAreaSelect() {
   areaDiv.appendChild(title);
   const btn = document.createElement('button');
   btn.textContent = '南山田地区';
-  btn.style.fontSize = '1.2rem';
-  btn.style.padding = '1rem 2rem';
-  // 初期はハイライトをしていないが、Supabase と連携している場合は地区単位で判断する
+  btn.className = 'big-main-btn';
   (async () => {
     const active = await fetchActionStatus('南山田地区', '');
     if (active) {
-      btn.style.background = '#ffef99';
+      btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
+      btn.style.color = '#222';
     }
   })();
   btn.addEventListener('click', () => {
-    // 地区を選択
     CURRENT_AREA = '南山田地区';
     showPlaceSelect();
   });
@@ -819,23 +812,13 @@ function showPlaceSelect() {
   const createPlaceButton = (placeName) => {
     const btn = document.createElement('button');
     btn.textContent = placeName;
-    btn.style.fontSize = '1.2rem';
-    btn.style.padding = '1rem 2rem';
-    btn.style.margin = '0.5rem';
-    btn.style.display = 'block';
-    btn.style.width = '80%';
-    btn.style.maxWidth = '300px';
-    btn.style.marginLeft = 'auto';
-    btn.style.marginRight = 'auto';
-    // Supabase からその場所が実施中かどうかチェックして色付け
+    btn.className = 'place-btn';
     (async () => {
       const active = await fetchActionStatus(CURRENT_AREA || '南山田地区', placeName);
-      if (active) btn.style.background = '#ffef99';
+      if (active) btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
     })();
     btn.addEventListener('click', () => {
-      // 地区・場所を設定
       CURRENT_PLACE = placeName;
-      // タブUIを必ず表示し、指揮者用カード画面に遷移
       document.getElementById('tabs').style.display = '';
       showActionCard('commander', '指揮者用カード');
     });
