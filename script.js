@@ -6,6 +6,7 @@
  */
 async function saveCardState(cardId, stateObj) {
   if (!supabase || !CURRENT_AREA || !CURRENT_PLACE) return;
+
   try {
     await supabase.from('card_states').upsert({
       area: CURRENT_AREA,
@@ -272,134 +273,28 @@ function renderRichSections(card, container) {
     }
     (section.blocks || []).forEach(block => {
       if (block.type === 'raw') {
-
-        // --- Supabaseでカード入力値を保存・共有する仕組みを追加 ---
-        /**
-         * カードの入力状態（チェック・テキスト等）をSupabase card_statesテーブルに保存
-         * @param {string} cardId
-         * @param {object} stateObj - { taskId: 値, ... }
-         */
-        async function saveCardState(cardId, stateObj) {
-          if (!supabase || !CURRENT_AREA || !CURRENT_PLACE) return;
-          try {
-            await supabase.from('card_states').upsert({
-              area: CURRENT_AREA,
-              facility: CURRENT_PLACE,
-              card_id: cardId,
-              state: stateObj,
-              updated_at: new Date().toISOString()
-            }, { onConflict: ['area', 'facility', 'card_id'] });
-          } catch (err) {
-            console.error('saveCardState error:', err);
-          }
-        }
-
-        /**
-         * Supabaseからカードの入力状態を取得
-         * @param {string} cardId
-         * @returns {Promise<object|null>} { taskId: 値, ... } or null
-         */
-        async function loadCardState(cardId) {
-          if (!supabase || !CURRENT_AREA || !CURRENT_PLACE) return null;
-          try {
-            const { data, error } = await supabase
-              .from('card_states')
-              .select('state')
-              .eq('area', CURRENT_AREA)
-              .eq('facility', CURRENT_PLACE)
-              .eq('card_id', cardId)
-              .single();
-            if (error) return null;
-            return data && data.state ? data.state : null;
-          } catch (err) {
-            return null;
-          }
-        }
-
-        // --- renderCardのタスク描画部をSupabase同期対応に修正 ---
-        async function renderCard(cardId) {
-          const container = document.getElementById('content');
-          container.textContent = '読み込み中...';
-          const card = await getCardData(cardId);
-          container.innerHTML = '';
-          if (card.richSections) {
-            renderRichSections(card, container);
-            return;
-          }
-
-          // --- ここからSupabase状態の取得 ---
-          let supaState = await loadCardState(cardId);
-          if (!supaState) supaState = {};
-
-          // セクションを1つずつ描画
-          (card.sections || []).forEach((section, secIdx) => {
-            const sectionDiv = document.createElement('div');
-            sectionDiv.className = 'section';
-            const header = document.createElement('h2');
-            header.textContent = section.name;
-            sectionDiv.appendChild(header);
-
-            (section.tasks || []).forEach((task, taskIdx) => {
-              const taskDiv = document.createElement('div');
-              taskDiv.className = 'task';
-              const label = document.createElement('label');
-              label.textContent = task.description;
-              label.htmlFor = `${cardId}_${secIdx}_${task.id}`;
-              taskDiv.appendChild(label);
-              let input;
-              // --- 入力値はSupabaseの状態で上書き ---
-              let value = supaState[task.id];
-              if (value === undefined) value = task.value;
-
-              if (task.type === 'boolean') {
-                input = document.createElement('input');
-                input.type = 'checkbox';
-                input.checked = value === true;
-                input.addEventListener('change', async (e) => {
-                  supaState[task.id] = e.target.checked;
-                  await saveCardState(cardId, supaState);
-                });
-              } else if (task.type === 'choice') {
-                input = document.createElement('select');
-                task.options.forEach((opt) => {
-                  const option = document.createElement('option');
-                  option.value = opt;
-                  option.textContent = opt;
-                  if (value === opt) option.selected = true;
-                  input.appendChild(option);
-                });
-                input.addEventListener('change', async (e) => {
-                  supaState[task.id] = e.target.value;
-                  await saveCardState(cardId, supaState);
-                });
-              } else if (task.type === 'number') {
-                input = document.createElement('input');
-                input.type = 'number';
-                input.value = value || '';
-                input.addEventListener('change', async (e) => {
-                  supaState[task.id] = e.target.value;
-                  await saveCardState(cardId, supaState);
-                });
-              } else if (task.type === 'text') {
-                input = document.createElement('textarea');
-                input.rows = 2;
-                input.value = value || '';
-                input.addEventListener('change', async (e) => {
-                  supaState[task.id] = e.target.value;
-                  await saveCardState(cardId, supaState);
-                });
-              } else if (task.type === 'label') {
-                input = document.createElement('span');
-                input.textContent = task.description;
-              }
-              input.id = `${cardId}_${secIdx}_${task.id}`;
-              taskDiv.appendChild(input);
-              sectionDiv.appendChild(taskDiv);
-            });
-            container.appendChild(sectionDiv);
-          });
-
-          // --- Supabaseリアルタイム反映 ---
+        const p = document.createElement('p');
+        p.textContent = block.text;
+        secDiv.appendChild(p);
+      } else if (block.type === 'check') {
+        const label = document.createElement('label');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = !!block.checked;
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(block.text));
+        secDiv.appendChild(label);
+      } else if (block.type === 'field') {
+        const label = document.createElement('label');
+        label.textContent = block.label;
+        const textarea = document.createElement('textarea');
+        textarea.value = block.value || '';
+        secDiv.appendChild(label);
+        secDiv.appendChild(textarea);
+      }
+    });
+    container.appendChild(secDiv);
+  });
           if (supabase && CURRENT_AREA && CURRENT_PLACE) {
             // チャンネル名はarea/facility/card_idでユニークに
             const channel = supabase.channel(`card_states_${CURRENT_AREA}_${CURRENT_PLACE}_${cardId}`);
@@ -423,7 +318,6 @@ function renderRichSections(card, container) {
           }
 
         }
-      }
 // --- ここまで ---
 
 const fallbackCards = {
@@ -1278,4 +1172,4 @@ function showActionCard(cardId, cardLabel) {
 }
 
 // 初期表示はホーム画面
-showHome();
+document.addEventListener('DOMContentLoaded', showHome);
