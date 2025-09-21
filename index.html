@@ -10,68 +10,88 @@
         padding: 0;
         background: #f9fafb;
         color: #111827;
+        font-size: 18px;
+        -webkit-text-size-adjust: 100%;
       }
 
       header {
         background: #2563eb;
         color: white;
-        padding: 1rem;
+        padding: 1.2rem 1rem 1.2rem 1rem;
+        font-size: 1.2em;
       }
 
       h1 {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 2rem;
+        letter-spacing: 0.03em;
       }
 
       #tabs {
         display: flex;
         background: #e5e7eb;
         border-bottom: 1px solid #d1d5db;
+        position: sticky;
+        top: 0;
+        z-index: 100;
       }
 
       #tabs button {
         flex: 1;
-        padding: 0.75rem;
+        padding: 1.1rem 0.5rem;
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 1rem;
+        font-size: 1.2rem;
+        border-radius: 0;
+        transition: background 0.2s;
+        min-width: 44px;
+        min-height: 44px;
+        touch-action: manipulation;
       }
 
       #tabs button.active {
         background: #2563eb;
         color: white;
+        font-weight: bold;
       }
 
       #content {
-        padding: 1rem;
+        padding: 1.2rem 0.5rem 2.5rem 0.5rem;
+        max-width: 600px;
+        margin: 0 auto;
       }
 
       .section {
-        margin-bottom: 1rem;
+        margin-bottom: 1.2rem;
         border: 1px solid #e5e7eb;
-        border-radius: 4px;
+        border-radius: 8px;
         background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       }
 
       .section h2 {
         margin: 0;
-        padding: 0.5rem 1rem;
+        padding: 0.7rem 1.2rem;
         background: #f3f4f6;
         border-bottom: 1px solid #e5e7eb;
-        font-size: 1.1rem;
+        font-size: 1.3rem;
       }
 
       .task {
-        padding: 0.5rem 1rem;
+        padding: 0.7rem 1.2rem;
         display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
+        align-items: center;
+        gap: 1rem;
+        font-size: 1.15em;
       }
 
       .task label {
         flex: 1;
-        line-height: 1.5;
+        line-height: 1.7;
+        font-size: 1.1em;
+        min-width: 44px;
+        min-height: 44px;
       }
 
       .task input[type="text"],
@@ -79,53 +99,101 @@
       .task select,
       .task textarea {
         flex: 1;
-        padding: 0.25rem;
+        padding: 0.7rem 0.5rem;
         border: 1px solid #d1d5db;
-        border-radius: 3px;
-        font-size: 0.9rem;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        min-width: 44px;
+        min-height: 44px;
+        box-sizing: border-box;
       }
 
       .task textarea {
         resize: vertical;
+        font-size: 1.1rem;
       }
 
       .equipment-list {
         list-style: none;
-        padding: 0.5rem 1rem;
+        padding: 0.7rem 1.2rem;
         margin: 0;
       }
 
       .equipment-list li {
         display: flex;
         align-items: center;
-        margin-bottom: 0.25rem;
-        gap: 0.25rem;
+        margin-bottom: 0.5rem;
+        gap: 0.7rem;
       }
 
       .equipment-list li input[type="text"] {
         flex: 1;
-        padding: 0.25rem;
+        padding: 0.7rem 0.5rem;
         border: 1px solid #d1d5db;
-        border-radius: 3px;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        min-width: 44px;
+        min-height: 44px;
       }
 
       .equipment-list li button {
-        padding: 0.25rem 0.5rem;
+        padding: 0.7rem 1.2rem;
         border: none;
         background: #ef4444;
         color: white;
-        border-radius: 3px;
+        border-radius: 6px;
         cursor: pointer;
+        font-size: 1.1rem;
+        min-width: 44px;
+        min-height: 44px;
+        touch-action: manipulation;
       }
 
       .add-btn {
-        margin: 0.5rem 1rem;
-        padding: 0.25rem 0.5rem;
+        margin: 0.7rem 1.2rem;
+        padding: 0.7rem 1.2rem;
         background: #2563eb;
         color: white;
         border: none;
-        border-radius: 3px;
+        border-radius: 6px;
         cursor: pointer;
+        font-size: 1.1rem;
+        min-width: 44px;
+        min-height: 44px;
+        touch-action: manipulation;
+      }
+
+      /* チェックボックス・ラジオボタンを大きく */
+      input[type="checkbox"], input[type="radio"] {
+        width: 2em;
+        height: 2em;
+        accent-color: #2563eb;
+        margin-right: 0.7em;
+      }
+
+      select {
+        font-size: 1.1rem;
+        min-width: 44px;
+        min-height: 44px;
+      }
+
+      /* モバイル向けレスポンシブ */
+      @media (max-width: 600px) {
+        body {
+          font-size: 17px;
+        }
+        #content {
+          padding: 0.7rem 0.2rem 2.5rem 0.2rem;
+        }
+        .section h2 {
+          font-size: 1.1rem;
+        }
+        .task label, .task input, .task select, .task textarea {
+          font-size: 1rem;
+        }
+        .add-btn, .equipment-list li button {
+          font-size: 1rem;
+        }
       }
     </style>
   </head>
