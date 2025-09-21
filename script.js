@@ -78,6 +78,7 @@
     ]
   };
   const registry = (window.fallbackCards || {});
+  // faithful原文再現の内容は richSections に追加するが、sections は削除しない
   function upsertCardByTitleOrId(newCard, titleKeywordList) {
     const allEntries = Object.entries(registry);
     let hitKey = allEntries.find(([key, card]) => {
@@ -92,7 +93,7 @@
       const [key, card] = hitKey;
       card.title = newCard.title;
       card.richSections = newCard.richSections;
-      delete card.sections;
+      // sectionsは削除しない（従来型UIで表示される）
       registry[key] = card;
       return card;
     } else {
