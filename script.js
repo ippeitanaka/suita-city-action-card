@@ -1,5 +1,14 @@
 // --- Supabaseでカード入力値を保存・共有する仕組みを追加 ---
 
+// Supabase初期化
+const SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('supabaseUrl') || '';
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || localStorage.getItem('supabaseAnonKey') || '';
+let supabase = null;
+if (typeof window.createClient === 'function') {
+  supabase = window.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.supabase = supabase;
+}
+
 /**
  * カードIDからカードデータを取得（現状はfallbackCardsのみ）
  * @param {string} cardId
