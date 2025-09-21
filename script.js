@@ -390,6 +390,8 @@ function renderRichSections(card, container) {
 // --- ここまで ---
 
 const fallbackCards = {
+// グローバル参照用
+window.fallbackCards = fallbackCards;
   secondary_disaster: {
     id: 'secondary_disaster',
     title: '二次災害防止 6',
