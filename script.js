@@ -1,3 +1,154 @@
+// --- faithful差し替えロジック（4 携行備品・5 情報収集・報告） ---
+(function applyFaithfulCards() {
+  const carryingItemsRich = {
+    id: 'hq_supplies',
+    title: '携行備品（原文再現）',
+    richSections: [
+      {
+        title: '総本部担当者 携行備品',
+        blocks: [
+          { type:'raw', text:'4 災害対策総本部担当者は以下のものを携行して\n総本部にむかう【体育館前教室】' },
+          { type:'raw', text:'■ 常備品 リュック内を確認し、不足していれば補充する' },
+          { type:'raw', text:'1 防災リュック' },
+          { type:'raw', text:'1 モバイルバッテリー' },
+          { type:'raw', text:'2 ラップ' },
+          { type:'raw', text:'3 懐中電灯' },
+          { type:'raw', text:'4 ランタン' },
+          { type:'raw', text:'6 筆記用具' },
+          { type:'raw', text:'7 立ち入り禁止テープ' },
+          { type:'raw', text:'8 手袋' },
+          { type:'raw', text:'9 マジックペン' },
+          { type:'raw', text:'コピー用紙A4 500枚' },
+          { type:'raw', text:'iphone ノートパソコン' },
+          { type:'raw', text:'ラジオ 10' },
+        ]
+      },
+      {
+        title: '■ 携行品（職員室内で探してリュックに入れる）',
+        blocks: [
+          { type:'raw', text:'1 マスターキー(非常用)' },
+          { type:'raw', text:'2 非常物資倉庫 カギ' },
+          { type:'raw', text:'3 乾電池' },
+          { type:'raw', text:'4 ipad' },
+          { type:'raw', text:'5 ポータブルバッテリー' },
+          { type:'raw', text:'6 トランシーバー 1台' },
+          { type:'raw', text:'トランシーバーのチャンネルは7' },
+          { type:'raw', text:'※ 1 マスターキー(非常用)・2 非常物資倉庫カギは職員室' },
+          { type:'check', text:'常備品の在庫を確認した' },
+          { type:'check', text:'携行品を職員室で確保した' },
+          { type:'field', label:'不足・備考', value:'' },
+        ]
+      }
+    ]
+  };
+  const infoReportRich = {
+    id: 'hq_info_report',
+    title: '情報収集・報告（原文再現）',
+    richSections: [
+      {
+        title: '総本部担当者 情報収集・報告',
+        blocks: [
+          { type:'raw', text:'5 災害対策総本部担当者は、可能な限り情報の収集・伝達をおこなう' },
+          { type:'raw', text:'収集した情報は必要に応じてオープンチャットで伝える' },
+          { type:'raw', text:'情報収集' },
+          { type:'raw', text:'➡ 各教室・応急処置室などから情報が集まる' },
+          { type:'raw', text:'➡ 建物内部チェック担当者・建物外部周辺担当者などから情報が集まる' },
+          { type:'raw', text:'収集した情報は黒板・ホワイトボード・用紙に記載するなどして 可視化・共有できるようにしておく' },
+          { type:'raw', text:'1 負傷者の状況【人数・氏名・程度など】' },
+          { type:'raw', text:'2 建物と周囲の被害状況' },
+          { type:'raw', text:'3 利用可能な通信機器の確認 内線・固定電話・携帯電話・SNS・インターネット・wi-fi 等' },
+          { type:'raw', text:'4 インターネット上から情報収集' },
+          { type:'raw', text:'全般的な情報／気象庁・大阪府・吹田市役所等' },
+          { type:'raw', text:'津波情報／気象庁・ニュースサイト等' },
+          { type:'raw', text:'大津波警報の場合は千里丘駅周辺まで浸水する危険がある' },
+          { type:'raw', text:'津波警報・津波注意報の場合は浸水の可能性は低い' },
+          { type:'raw', text:'交通情報／各交通機関のホームページ等' },
+        ]
+      },
+      {
+        title: '報告',
+        blocks: [
+          { type:'raw', text:'1 吹田市への状況報告 危機管理室 電話番号:06-6384-1753' },
+          { type:'raw', text:'➡ 人員など応援が必要な場合は要請する' },
+          { type:'check', text:'黒板／ホワイトボードに集約して可視化した' },
+          { type:'check', text:'オープンチャットに必要情報を配信した' },
+          { type:'field', label:'連絡・要請の記録', value:'' },
+        ]
+      }
+    ]
+  };
+  const registry = (window.fallbackCards || {});
+  function upsertCardByTitleOrId(newCard, titleKeywordList) {
+    const allEntries = Object.entries(registry);
+    let hitKey = allEntries.find(([key, card]) => {
+      if (!card) return false;
+      const title = (card.title || '') + '';
+      const id = (card.id || key || '') + '';
+      const byId = (id && (id === newCard.id));
+      const byTitle = titleKeywordList.some(k => title.includes(k));
+      return byId || byTitle;
+    });
+    if (hitKey) {
+      const [key, card] = hitKey;
+      card.title = newCard.title;
+      card.richSections = newCard.richSections;
+      delete card.sections;
+      registry[key] = card;
+      return card;
+    } else {
+      registry[newCard.id] = newCard;
+      return newCard;
+    }
+  }
+  upsertCardByTitleOrId(carryingItemsRich, ['携行備品']);
+  upsertCardByTitleOrId(infoReportRich, ['情報収集', '報告', '情報収集・報告']);
+  if (window.fallbackCards) window.fallbackCards = registry;
+})();
+
+// --- richSections描画関数 ---
+function renderRichSections(card, container) {
+  container.innerHTML = '';
+  (card.richSections || []).forEach(section => {
+    const secDiv = document.createElement('div');
+    secDiv.className = 'section';
+    if (section.title) {
+      const h2 = document.createElement('h2');
+      h2.textContent = section.title;
+      secDiv.appendChild(h2);
+    }
+    (section.blocks || []).forEach(block => {
+      if (block.type === 'raw') {
+        const p = document.createElement('pre');
+        p.textContent = block.text;
+        p.className = 'mono';
+        secDiv.appendChild(p);
+      } else if (block.type === 'check') {
+        const label = document.createElement('label');
+        label.style.display = 'block';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.style.marginRight = '0.7em';
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(block.text));
+        secDiv.appendChild(label);
+      } else if (block.type === 'field') {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.style.margin = '0.7em 0';
+        const label = document.createElement('label');
+        label.textContent = block.label || '';
+        label.style.marginRight = '0.7em';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = block.value || '';
+        input.style.minWidth = '200px';
+        fieldDiv.appendChild(label);
+        fieldDiv.appendChild(input);
+        secDiv.appendChild(fieldDiv);
+      }
+    });
+    container.appendChild(secDiv);
+  });
+}
 // action_card_app/script.js
 // テスト版の災害時アクションカードアプリのメインスクリプトです。
 // Supabase を利用してカードデータを保存・取得しますが、Supabase が
@@ -574,6 +725,10 @@ async function renderCard(cardId) {
   // 新鮮なデータを取得するために毎回クローンを使用
   const card = await getCardData(cardId);
   container.innerHTML = '';
+  if (card.richSections) {
+    renderRichSections(card, container);
+    return;
+  }
   // --- 担当場所・担当者 入力欄を上部に追加 ---
   if (["internal", "external", "teacher"].includes(cardId)) {
     // 保存用キー
@@ -626,7 +781,7 @@ async function renderCard(cardId) {
     container.appendChild(metaDiv);
   }
   // セクションを1つずつ描画
-  card.sections.forEach((section, secIdx) => {
+  (card.sections || []).forEach((section, secIdx) => {
     const sectionDiv = document.createElement('div');
     sectionDiv.className = 'section';
     const header = document.createElement('h2');
@@ -676,7 +831,7 @@ async function renderCard(cardId) {
       return;
     }
     // タスクを描画
-    section.tasks.forEach((task, taskIdx) => {
+    (section.tasks || []).forEach((task, taskIdx) => {
       const taskDiv = document.createElement('div');
       taskDiv.className = 'task';
       const label = document.createElement('label');
