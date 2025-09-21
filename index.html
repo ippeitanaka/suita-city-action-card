@@ -5,26 +5,32 @@
   <title>吹田市災害時アクションカードアプリ　南山田地区</title>
     <style>
       body {
-        font-family: sans-serif;
+        font-family: 'Noto Sans JP', 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
         margin: 0;
         padding: 0;
-        background: #f9fafb;
-        color: #111827;
+        background: linear-gradient(120deg, #f9fafb 60%, #e0e7ff 100%);
+        color: #1e293b;
         font-size: 18px;
         -webkit-text-size-adjust: 100%;
+        min-height: 100vh;
       }
 
       header {
-        background: #2563eb;
+        background: linear-gradient(90deg, #2563eb 70%, #60a5fa 100%);
         color: white;
-        padding: 1.2rem 1rem 1.2rem 1rem;
-        font-size: 1.2em;
+        padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+        font-size: 1.25em;
+        box-shadow: 0 2px 12px rgba(37,99,235,0.08);
+        border-bottom-left-radius: 1.5rem;
+        border-bottom-right-radius: 1.5rem;
       }
 
       h1 {
         margin: 0;
-        font-size: 2rem;
-        letter-spacing: 0.03em;
+        font-size: 2.2rem;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+        text-shadow: 0 2px 8px rgba(37,99,235,0.10);
       }
 
       #tabs {
@@ -34,6 +40,10 @@
         position: sticky;
         top: 0;
         z-index: 100;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.04);
+        border-bottom-left-radius: 1.2rem;
+        border-bottom-right-radius: 1.2rem;
+        overflow: hidden;
       }
 
       #tabs button {
@@ -44,24 +54,28 @@
         cursor: pointer;
         font-size: 1.2rem;
         border-radius: 0;
-        transition: background 0.2s;
+        transition: background 0.2s, color 0.2s;
         min-width: 44px;
         min-height: 44px;
         touch-action: manipulation;
+        font-weight: 500;
+        color: #374151;
       }
 
       #tabs button.active {
-        background: #2563eb;
-        color: white;
+        background: linear-gradient(90deg, #2563eb 70%, #60a5fa 100%);
+        color: #fff;
         font-weight: bold;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.10);
       }
 
       #content {
-        padding: 1.2rem 0.5rem 2.5rem 0.5rem;
+        padding: 2.2rem 0.5rem 2.5rem 0.5rem;
         width: 100vw;
         max-width: 100vw;
         margin: 0;
         box-sizing: border-box;
+        background: transparent;
       }
       /* 地域・地区選択ボタンのデザイン */
       .big-main-btn {
@@ -114,27 +128,42 @@
       }
 
       .section {
-        margin-bottom: 1.2rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        margin-bottom: 2rem;
+        border: none;
+        border-radius: 1.5rem;
+        background: linear-gradient(120deg, #fff 80%, #e0e7ff 100%);
+        box-shadow: 0 4px 24px rgba(37,99,235,0.07);
+        padding: 0.5rem 0 1.2rem 0;
+        overflow: hidden;
+        position: relative;
       }
 
       .section h2 {
-        margin: 0;
-        padding: 0.7rem 1.2rem;
-        background: #f3f4f6;
-        border-bottom: 1px solid #e5e7eb;
-        font-size: 1.3rem;
+        margin: 0 0 0.5rem 0;
+        padding: 1.2rem 2rem 0.7rem 2rem;
+        background: none;
+        border-bottom: none;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #2563eb;
+        letter-spacing: 0.03em;
+        text-shadow: 0 2px 8px rgba(37,99,235,0.08);
       }
 
       .task {
-        padding: 0.7rem 1.2rem;
+        padding: 1.1rem 2rem;
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 1.2rem;
         font-size: 1.15em;
+        background: rgba(96,165,250,0.07);
+        border-radius: 1.2rem;
+        margin-bottom: 1.1rem;
+        box-shadow: 0 1px 4px rgba(96,165,250,0.07);
+        transition: background 0.2s;
+      }
+      .task:focus-within {
+        background: rgba(37,99,235,0.10);
       }
 
       .task label {
@@ -143,6 +172,9 @@
         font-size: 1.1em;
         min-width: 44px;
         min-height: 44px;
+        font-weight: 500;
+        color: #1e293b;
+        letter-spacing: 0.01em;
       }
 
       .task input[type="text"],
@@ -150,69 +182,97 @@
       .task select,
       .task textarea {
         flex: 1;
-        padding: 0.7rem 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+        padding: 0.9rem 0.7rem;
+        border: 1.5px solid #a5b4fc;
+        border-radius: 0.8rem;
         font-size: 1.1rem;
         min-width: 44px;
         min-height: 44px;
         box-sizing: border-box;
+        background: #f8fafc;
+        transition: border 0.2s, box-shadow 0.2s;
+      }
+      .task input[type="text"]:focus,
+      .task input[type="number"]:focus,
+      .task select:focus,
+      .task textarea:focus {
+        border: 1.5px solid #2563eb;
+        box-shadow: 0 0 0 2px #93c5fd44;
+        outline: none;
       }
 
       .task textarea {
         resize: vertical;
         font-size: 1.1rem;
+        border-radius: 0.8rem;
       }
 
       .equipment-list {
         list-style: none;
-        padding: 0.7rem 1.2rem;
+        padding: 0.7rem 2rem;
         margin: 0;
       }
 
       .equipment-list li {
         display: flex;
         align-items: center;
-        margin-bottom: 0.5rem;
-        gap: 0.7rem;
+        margin-bottom: 0.7rem;
+        gap: 0.9rem;
       }
 
       .equipment-list li input[type="text"] {
         flex: 1;
-        padding: 0.7rem 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+        padding: 0.9rem 0.7rem;
+        border: 1.5px solid #a5b4fc;
+        border-radius: 0.8rem;
         font-size: 1.1rem;
         min-width: 44px;
         min-height: 44px;
+        background: #f8fafc;
       }
 
       .equipment-list li button {
         padding: 0.7rem 1.2rem;
         border: none;
-        background: #ef4444;
+        background: linear-gradient(90deg, #ef4444 60%, #f87171 100%);
         color: white;
-        border-radius: 6px;
+        border-radius: 1.2rem;
         cursor: pointer;
         font-size: 1.1rem;
         min-width: 44px;
         min-height: 44px;
         touch-action: manipulation;
+        box-shadow: 0 1px 4px rgba(239,68,68,0.10);
+        transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+      }
+      .equipment-list li button:active {
+        background: linear-gradient(90deg, #b91c1c 60%, #ef4444 100%);
+        box-shadow: 0 1px 4px rgba(239,68,68,0.18);
+        transform: scale(0.98);
       }
 
       .add-btn {
-        margin: 0.7rem 1.2rem;
-        padding: 0.7rem 1.2rem;
-        background: #2563eb;
+        margin: 0.7rem 2rem;
+        padding: 0.9rem 1.5rem;
+        background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
         color: white;
         border: none;
-        border-radius: 6px;
+        border-radius: 1.2rem;
         cursor: pointer;
         font-size: 1.1rem;
         min-width: 44px;
         min-height: 44px;
         touch-action: manipulation;
+        box-shadow: 0 1px 4px rgba(37,99,235,0.10);
+        transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
       }
+      .add-btn:active {
+        background: linear-gradient(90deg, #1e40af 60%, #2563eb 100%);
+        box-shadow: 0 1px 4px rgba(37,99,235,0.18);
+        transform: scale(0.98);
+      }
+  /* Google Fonts: Noto Sans JP */
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
       /* チェックボックス・ラジオボタンを大きく */
       input[type="checkbox"], input[type="radio"] {
