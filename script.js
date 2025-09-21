@@ -1,4 +1,50 @@
 // --- Supabaseでカード入力値を保存・共有する仕組みを追加 ---
+
+// グローバル変数: 地域・場所
+let CURRENT_AREA = '';
+let CURRENT_PLACE = '';
+
+/**
+ * Supabaseからアクション開始状態（action_status）を取得
+ * @param {string} area
+ * @param {string} place
+ * @returns {Promise<boolean|null>} is_active or null
+ */
+async function fetchActionStatus(area, place) {
+  if (!window.supabase || !area) return null;
+  try {
+    const { data, error } = await window.supabase
+      .from('action_status')
+      .select('is_active')
+      .eq('area', area)
+      .eq('place', place)
+      .maybeSingle();
+    if (error) return null;
+    return data && typeof data.is_active === 'boolean' ? data.is_active : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Supabaseにアクション開始状態（action_status）をupsert
+ * @param {string} area
+ * @param {string} place
+ * @param {boolean} isActive
+ */
+async function upsertActionStatus(area, place, isActive) {
+  if (!window.supabase || !area) return;
+  try {
+    await window.supabase.from('action_status').upsert({
+      area,
+      place,
+      is_active: !!isActive,
+      updated_at: new Date().toISOString()
+    }, { onConflict: ['area', 'place'] });
+  } catch (err) {
+    console.error('upsertActionStatus error:', err);
+  }
+}
 /**
  * カードの入力状態（チェック・テキスト等）をSupabase card_statesテーブルに保存
  * @param {string} cardId
