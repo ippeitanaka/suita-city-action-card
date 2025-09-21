@@ -1,3 +1,13 @@
+// --- デバッグ: script.jsロード確認 ---
+(function debugScriptJsLoad() {
+  console.debug('[DEBUG] script.js loaded at', new Date().toISOString());
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+    console.error('[DEBUG] SUPABASE_URL or SUPABASE_ANON_KEY is missing:', window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  } else {
+    console.debug('[DEBUG] SUPABASE_URL:', window.SUPABASE_URL);
+    console.debug('[DEBUG] SUPABASE_ANON_KEY:', window.SUPABASE_ANON_KEY.slice(0, 8) + '...');
+  }
+})();
 // --- faithful差し替えロジック（4 携行備品・5 情報収集・報告） ---
 (function applyFaithfulCards() {
   const carryingItemsRich = {
@@ -700,15 +710,17 @@ async function getCardData(cardId) {
         .eq('id', cardId)
         .single();
       if (error) {
-        console.warn('Supabase からカードを取得できませんでした。fallback を使用します。', error);
+        console.warn('[DEBUG] Supabase からカードを取得できませんでした。fallback を使用します。', error);
       }
       if (data && data.sections) {
+        console.debug('[DEBUG] Supabaseカード取得成功', data);
         return data;
       }
     } catch (err) {
-      console.warn('Supabase からの取得時にエラーが発生しました。fallback を使用します。', err);
+      console.warn('[DEBUG] Supabase からの取得時にエラーが発生しました。fallback を使用します。', err);
     }
   }
+  console.debug('[DEBUG] fallbackCardsから取得', cardId, fallbackCards[cardId]);
   return structuredClone(fallbackCards[cardId]);
 }
 
@@ -739,11 +751,23 @@ async function updateCardSections(cardId, sections) {
  */
 async function renderCard(cardId) {
   const container = document.getElementById('content');
+  if (!container) {
+    console.error('[DEBUG] #content element not found in DOM');
+    return;
+  }
   container.textContent = '読み込み中...';
-  // 新鮮なデータを取得するために毎回クローンを使用
-  const card = await getCardData(cardId);
+  let card;
+  try {
+    card = await getCardData(cardId);
+    console.debug('[DEBUG] getCardData result for', cardId, card);
+  } catch (e) {
+    console.error('[DEBUG] getCardData error:', e);
+    container.textContent = '[DEBUG] getCardData error: ' + e;
+    return;
+  }
   container.innerHTML = '';
   if (card.richSections) {
+    console.debug('[DEBUG] renderRichSections for', cardId);
     renderRichSections(card, container);
     return;
   }
@@ -883,6 +907,10 @@ function setupTabs(cardId, cardLabel) {
 function showHome() {
   setHeaderVisible(false);
   const container = document.getElementById('content');
+  if (!container) {
+    console.error('[DEBUG] renderRichSections: container is null');
+    return;
+  }
   container.innerHTML = '';
   // 画像を全面に表示
   const imgDiv = document.createElement('div');
