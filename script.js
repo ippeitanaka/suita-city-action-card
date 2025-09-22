@@ -856,7 +856,7 @@ async function renderCard(cardId) {
           if (!confirm('このセクションを削除しますか？')) return;
           card.sections.splice(secIdx, 1);
           await updateCardSections(cardId, card.sections);
-          renderCard(cardId);
+          await renderCard(cardId);
         };
         sectionDiv.appendChild(delSecBtn);
       }
@@ -879,7 +879,7 @@ async function renderCard(cardId) {
           if (newName && newName.trim() !== section.name) {
             section.name = newName.trim();
             await updateCardSections(cardId, card.sections);
-            renderCard(cardId);
+            await renderCard(cardId);
           }
         };
         sectionDiv.appendChild(editSecBtn);
@@ -935,7 +935,7 @@ async function renderCard(cardId) {
             if (!confirm('このタスクを削除しますか？')) return;
             section.tasks.splice(taskIdx, 1);
             await updateCardSections(cardId, card.sections);
-            renderCard(cardId);
+            await renderCard(cardId);
           };
           taskDiv.appendChild(delTaskBtn);
           // タスク編集ボタン
@@ -956,7 +956,7 @@ async function renderCard(cardId) {
             if (newDesc && newDesc.trim() !== task.description) {
               task.description = newDesc.trim();
               await updateCardSections(cardId, card.sections);
-              renderCard(cardId);
+              await renderCard(cardId);
             }
           };
           taskDiv.appendChild(editTaskBtn);
@@ -984,6 +984,7 @@ async function renderCard(cardId) {
           input.value = task.value || '';
           input.disabled = false; // 編集可能
           input.addEventListener('change', async (e) => {
+            // 空欄も必ずsupabaseに保存
             task.value = e.target.value;
             console.debug('[DEBUG] テキスト入力変更:', cardId, section.name, task.description, task.value);
             await updateCardSections(cardId, card.sections);
@@ -1038,27 +1039,12 @@ async function renderCard(cardId) {
 function setHeaderVisible(visible, cardLabel) {
   const header = document.querySelector('header');
   const tabs = document.getElementById('tabs');
-  if (visible) {
-    header.style.display = '';
-    // 既存のトップコントロールを保持（もしあれば取得して後で再追加する）
-    const existingControls = header.querySelector('#top-action-controls');
-    // header の中身を再構築
-    header.innerHTML = '';
-    const h1 = document.createElement('h1');
-    h1.textContent = '吹田市災害時アクションカードアプリ　南山田地区';
-    header.appendChild(h1);
-    if (cardLabel) {
-      const sub = document.createElement('div');
-      sub.style.fontSize = '1.1rem';
-      sub.style.marginTop = '0.3rem';
-      sub.textContent = cardLabel;
-      header.appendChild(sub);
-    }
-    if (existingControls) header.appendChild(existingControls);
-    if (tabs) tabs.style.display = '';
-  } else {
-    header.style.display = 'none';
-    if (tabs) tabs.style.display = 'none';
+  // UI表示/非表示のみ制御
+  if (header) header.style.display = visible ? '' : 'none';
+  if (tabs) tabs.style.display = visible ? '' : 'none';
+  if (visible && cardLabel) {
+    const titleElem = document.getElementById('card-title');
+    if (titleElem) titleElem.textContent = cardLabel;
   }
 }
 
