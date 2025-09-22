@@ -1225,6 +1225,9 @@ function showAreaSelect() {
     (async () => {
       const active = await fetchActionStatus(areaName, '');
       if (active) {
+        btn.style.background = '#f87171'; // 赤系
+        btn.style.color = '#fff';
+      } else {
         btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
         btn.style.color = '#222';
       }
@@ -1291,7 +1294,13 @@ function showPlaceSelect() {
     btn.className = 'place-btn';
     (async () => {
       const active = await fetchActionStatus(CURRENT_AREA || '南山田地区', placeName);
-      if (active) btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
+      if (active) {
+        btn.style.background = '#f87171'; // 赤系
+        btn.style.color = '#fff';
+      } else {
+        btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
+        btn.style.color = '#222';
+      }
     })();
     btn.addEventListener('click', () => {
       CURRENT_PLACE = placeName;
