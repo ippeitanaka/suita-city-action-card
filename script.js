@@ -964,6 +964,7 @@ async function renderCard(cardId) {
           cb.disabled = false; // 編集可能
           cb.addEventListener('change', async (e) => {
             task.value = e.target.checked;
+            console.debug('[DEBUG] チェックボックス変更:', cardId, section.name, task.description, task.value);
             await updateCardSections(cardId, card.sections);
           });
           label.appendChild(cb);
@@ -978,6 +979,7 @@ async function renderCard(cardId) {
           input.disabled = false; // 編集可能
           input.addEventListener('change', async (e) => {
             task.value = e.target.value;
+            console.debug('[DEBUG] テキスト入力変更:', cardId, section.name, task.description, task.value);
             await updateCardSections(cardId, card.sections);
           });
           taskDiv.appendChild(label);
@@ -991,6 +993,7 @@ async function renderCard(cardId) {
           input.disabled = false;
           input.addEventListener('change', async (e) => {
             task.value = e.target.value;
+            console.debug('[DEBUG] 数値入力変更:', cardId, section.name, task.description, task.value);
             await updateCardSections(cardId, card.sections);
           });
           taskDiv.appendChild(label);
@@ -1002,6 +1005,7 @@ async function renderCard(cardId) {
           select.disabled = false;
           select.addEventListener('change', async (e) => {
             task.value = e.target.value;
+            console.debug('[DEBUG] 選択肢変更:', cardId, section.name, task.description, task.value);
             await updateCardSections(cardId, card.sections);
           });
           task.options.forEach(opt => {
@@ -1105,12 +1109,13 @@ function showHome() {
   btn.addEventListener('click', showAreaSelect);
   imgDiv.appendChild(btn);
 
+  // 管理・印刷ボタン（管理モード時のみ印刷ボタン表示）
   // 管理ボタン
   const adminBtn = document.createElement('button');
   adminBtn.textContent = isAdmin ? 'ログアウト' : '管理';
   adminBtn.className = 'admin-btn';
   adminBtn.style.position = 'absolute';
-  adminBtn.style.right = '2vw';
+  adminBtn.style.right = isAdmin ? '8vw' : '2vw';
   adminBtn.style.top = '2vh';
   adminBtn.style.background = isAdmin ? '#fee2e2' : '#e0e7ff';
   adminBtn.style.color = '#222';
@@ -1137,6 +1142,25 @@ function showHome() {
     }
   };
   imgDiv.appendChild(adminBtn);
+  // 印刷ボタン（管理モード時のみ）
+  if (isAdmin) {
+    const printBtn = document.createElement('button');
+    printBtn.textContent = '印刷';
+    printBtn.className = 'print-btn';
+    printBtn.style.position = 'absolute';
+    printBtn.style.right = '2vw';
+    printBtn.style.top = '2vh';
+    printBtn.style.background = '#f3f4f6';
+    printBtn.style.color = '#222';
+    printBtn.style.padding = '0.5em 1.2em';
+    printBtn.style.borderRadius = '8px';
+    printBtn.style.border = '1px solid #888';
+    printBtn.style.fontWeight = 'bold';
+    printBtn.onclick = () => {
+      window.print();
+    };
+    imgDiv.appendChild(printBtn);
+  }
   container.appendChild(imgDiv);
 }
 
