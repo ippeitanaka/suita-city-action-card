@@ -1118,21 +1118,44 @@ function showAreaSelect() {
   const title = document.createElement('h2');
   title.textContent = '地区を選択してください';
   areaDiv.appendChild(title);
-  const btn = document.createElement('button');
-  btn.textContent = '南山田地区';
-  btn.className = 'big-main-btn';
-  (async () => {
-    const active = await fetchActionStatus('南山田地区', '');
-    if (active) {
-      btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
-      btn.style.color = '#222';
-    }
-  })();
-  btn.addEventListener('click', () => {
-    CURRENT_AREA = '南山田地区';
-    showPlaceSelect();
+  // 地区リスト（Supabase未連携のため現状は固定）
+  const areaList = ['南山田地区'];
+  areaList.forEach(areaName => {
+    const btn = document.createElement('button');
+    btn.textContent = areaName;
+    btn.className = 'big-main-btn';
+    (async () => {
+      const active = await fetchActionStatus(areaName, '');
+      if (active) {
+        btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
+        btn.style.color = '#222';
+      }
+    })();
+    btn.addEventListener('click', () => {
+      CURRENT_AREA = areaName;
+      showPlaceSelect();
+    });
+    areaDiv.appendChild(btn);
   });
-  areaDiv.appendChild(btn);
+
+  // 地区追加ボタン
+  const addAreaBtn = document.createElement('button');
+  addAreaBtn.innerHTML = '<span style="font-size:1.5em;vertical-align:middle;">＋</span> 地区を追加';
+  addAreaBtn.className = 'big-main-btn';
+  addAreaBtn.style.background = '#e0e7ff';
+  addAreaBtn.style.color = '#222';
+  addAreaBtn.style.marginTop = '2em';
+  addAreaBtn.onclick = async () => {
+    const newArea = prompt('新しい地区名を入力してください');
+    if (!newArea || !newArea.trim()) return;
+    // Supabaseに登録
+    if (supabase) {
+      await upsertActionStatus(newArea.trim(), '', false);
+    }
+    // 画面を再描画
+    showAreaSelect();
+  };
+  areaDiv.appendChild(addAreaBtn);
   container.appendChild(areaDiv);
 }
 
@@ -1177,10 +1200,43 @@ function showPlaceSelect() {
     return btn;
   };
 
-  // 各場所のボタンを追加
-  placeDiv.appendChild(createPlaceButton('南山田小学校'));
-  placeDiv.appendChild(createPlaceButton('山田中学校'));
-  placeDiv.appendChild(createPlaceButton('南山田公民館'));
+  // 場所リスト（Supabase未連携のため現状は固定）
+  const placeList = ['南山田小学校', '山田中学校', '南山田公民館'];
+  placeList.forEach(placeName => {
+    placeDiv.appendChild(createPlaceButton(placeName));
+  });
+
+  // 実施場所追加ボタン
+  const addPlaceBtn = document.createElement('button');
+  addPlaceBtn.innerHTML = '<span style="font-size:1.3em;vertical-align:middle;">＋</span> 実施場所を追加';
+  addPlaceBtn.className = 'place-btn';
+  addPlaceBtn.style.background = '#e0e7ff';
+  addPlaceBtn.style.color = '#222';
+  addPlaceBtn.style.marginTop = '2em';
+  addPlaceBtn.onclick = async () => {
+    const newPlace = prompt('新しい実施場所名を入力してください');
+    if (!newPlace || !newPlace.trim()) return;
+    const area = CURRENT_AREA || '南山田地区';
+    // Supabaseに登録
+    if (supabase) {
+      await upsertActionStatus(area, newPlace.trim(), false);
+      // デフォルトアクションカードを複製（idにarea/placeを付与して保存）
+      for (const [cardId, cardObj] of Object.entries(fallbackCards)) {
+        const newCardId = `${area}_${newPlace.trim()}_${cardId}`;
+        // 既存カードのsectionsを複製
+        const cardData = {
+          id: newCardId,
+          title: cardObj.title,
+          sections: JSON.parse(JSON.stringify(cardObj.sections)),
+        };
+        // cardsテーブルにinsert（upsertでOK）
+        await supabase.from('cards').upsert(cardData, { onConflict: ['id'] });
+      }
+    }
+    // 画面を再描画
+    showPlaceSelect();
+  };
+  placeDiv.appendChild(addPlaceBtn);
 
   container.appendChild(placeDiv);
 }
