@@ -735,17 +735,23 @@ async function getCardData(cardId) {
  * @param {Array} sections
  */
 async function updateCardSections(cardId, sections) {
-  if (!supabase) return;
+  if (!supabase) {
+    console.warn('[DEBUG] supabase未設定のためupdateCardSectionsスキップ', cardId);
+    return;
+  }
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('cards')
       .update({ sections })
-      .eq('id', cardId);
+      .eq('id', cardId)
+      .select();
     if (error) {
-      console.error('Supabase の更新に失敗しました:', error);
+      console.error('[DEBUG] Supabase の更新に失敗:', error, 'cardId:', cardId, 'sections:', sections);
+    } else {
+      console.info('[DEBUG] Supabase 更新成功:', data, 'cardId:', cardId);
     }
   } catch (err) {
-    console.error('Supabase への更新時にエラーが発生しました:', err);
+    console.error('[DEBUG] Supabase への更新時に例外:', err, 'cardId:', cardId, 'sections:', sections);
   }
 }
 
