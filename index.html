@@ -8,6 +8,23 @@
     <meta charset="UTF-8" />
   <title>吹田市災害時アクションカードアプリ　南山田地区</title>
     <style>
+          /* 印刷時に編集・削除ボタンを非表示 */
+          @media print {
+            .task button, .section button, .edit-btn, .del-btn, .admin-btn, .print-btn {
+              display: none !important;
+            }
+            input[type="text"], textarea {
+              border: 1px solid #888 !important;
+              background: none !important;
+              box-shadow: none !important;
+              color: #222 !important;
+              min-width: 2em !important;
+              min-height: 1.2em !important;
+            }
+            input[type="text"]:not([value]), input[type="text"][value=""] {
+              background: none !important;
+            }
+          }
       body {
         font-family: 'Noto Sans JP', 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
         margin: 0;
