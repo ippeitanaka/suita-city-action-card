@@ -1071,6 +1071,7 @@ function setupTabs(cardId, cardLabel) {
 }
 
 function showHome() {
+  location.hash = '#home';
   setHeaderVisible(false);
   const container = document.getElementById('content');
   if (!container) {
@@ -1165,6 +1166,7 @@ function showHome() {
 }
 
 function showAreaSelect() {
+  location.hash = '#area';
   setHeaderVisible(false);
   const container = document.getElementById('content');
   container.innerHTML = '';
@@ -1231,6 +1233,7 @@ function showAreaSelect() {
 }
 
 function showPlaceSelect() {
+  location.hash = '#place:' + encodeURIComponent(CURRENT_AREA || '');
   setHeaderVisible(false);
   const container = document.getElementById('content');
   container.innerHTML = '';
@@ -1317,6 +1320,7 @@ function showPlaceSelect() {
 // showCardMenuは不要になったため削除
 
 function showActionCard(cardId, cardLabel) {
+  location.hash = '#card:' + encodeURIComponent(cardId) + ':' + encodeURIComponent(CURRENT_AREA || '') + ':' + encodeURIComponent(CURRENT_PLACE || '');
   setHeaderVisible(true, cardLabel);
   const container = document.getElementById('content');
   container.innerHTML = '';
@@ -1398,4 +1402,26 @@ function showActionCard(cardId, cardLabel) {
 }
 
 // 初期表示はホーム画面
-showHome();
+// ハッシュによる画面復元
+function restoreFromHash() {
+  const hash = location.hash || '';
+  if (hash.startsWith('#card:')) {
+    // #card:cardId:area:place
+    const [, cardId, area, place] = decodeURIComponent(hash).split(':');
+    if (area) CURRENT_AREA = area;
+    if (place) CURRENT_PLACE = place;
+    showActionCard(cardId, '');
+  } else if (hash.startsWith('#place:')) {
+    // #place:area
+    const area = decodeURIComponent(hash.split(':')[1] || '');
+    if (area) CURRENT_AREA = area;
+    showPlaceSelect();
+  } else if (hash === '#area') {
+    showAreaSelect();
+  } else {
+    showHome();
+  }
+}
+
+window.addEventListener('hashchange', restoreFromHash);
+restoreFromHash();
