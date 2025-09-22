@@ -1173,25 +1173,6 @@ function showHome() {
     }
   };
   imgDiv.appendChild(adminBtn);
-  // 印刷ボタン（管理モード時のみ）
-  if (isAdmin) {
-    const printBtn = document.createElement('button');
-    printBtn.textContent = '印刷';
-    printBtn.className = 'print-btn';
-    printBtn.style.position = 'absolute';
-    printBtn.style.right = '2vw';
-    printBtn.style.top = '2vh';
-    printBtn.style.background = '#f3f4f6';
-    printBtn.style.color = '#222';
-    printBtn.style.padding = '0.5em 1.2em';
-    printBtn.style.borderRadius = '8px';
-    printBtn.style.border = '1px solid #888';
-    printBtn.style.fontWeight = 'bold';
-    printBtn.onclick = () => {
-      window.print();
-    };
-    imgDiv.appendChild(printBtn);
-  }
   container.appendChild(imgDiv);
 }
 
