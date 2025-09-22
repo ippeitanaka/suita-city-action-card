@@ -345,14 +345,15 @@
               margin: 0 !important;
               padding: 0 !important;
               background: #fff !important;
-              font-size: 11pt;
+              font-size: 9.5pt !important;
+              line-height: 1.1 !important;
               overflow: visible !important;
             }
             body {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            #global-print-btn, .admin-only, .print-hide, .big-main-btn, .place-btn, .print-btn {
+            #global-print-btn, .admin-only, .print-hide, .big-main-btn, .place-btn, .print-btn, nav, footer {
               display: none !important;
             }
             header, #tabs {
@@ -362,12 +363,13 @@
               background: #e5e7eb !important;
               color: #222 !important;
               border-radius: 0 !important;
-              margin: 0 0 8px 0 !important;
-              padding: 8px 0 8px 0 !important;
+              margin: 0 0 2mm 0 !important;
+              padding: 2mm 0 2mm 0 !important;
+              min-height: 0 !important;
             }
             #tabs button {
-              font-size: 11pt !important;
-              padding: 0.5em 0.2em !important;
+              font-size: 9.5pt !important;
+              padding: 0.2em 0.1em !important;
               min-width: 0 !important;
               min-height: 0 !important;
               background: none !important;
@@ -375,6 +377,7 @@
               border: 1px solid #bbb !important;
               border-radius: 0 !important;
               box-shadow: none !important;
+              margin: 0 0.5mm 0 0 !important;
             }
             #tabs button.active {
               background: #2563eb !important;
@@ -391,32 +394,36 @@
             .section {
               width: 100% !important;
               max-width: 190mm !important;
-              margin: 0 0 8px 0 !important;
+              margin: 0 0 1.5mm 0 !important;
               page-break-inside: avoid;
               box-sizing: border-box;
+              padding: 0.5mm 0 0.5mm 0 !important;
             }
             .task {
               page-break-inside: avoid;
-              margin-bottom: 0.5em !important;
+              margin-bottom: 0.5mm !important;
+              padding: 0 !important;
             }
             h1, h2, h3 {
               page-break-after: avoid;
-              margin: 0.5em 0 0.2em 0 !important;
-              font-size: 1.1em !important;
+              margin: 0.2em 0 0.1em 0 !important;
+              font-size: 1em !important;
             }
             input, textarea, select {
               border: none !important;
               background: none !important;
               box-shadow: none !important;
-              font-size: 11pt !important;
+              font-size: 9.5pt !important;
               width: auto !important;
               color: #222 !important;
               padding: 0 !important;
               margin: 0 !important;
             }
             label {
-              font-size: 11pt !important;
+              font-size: 9.5pt !important;
               color: #222 !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
             /* 1ページに収めるための強制改ページ抑制 */
             html, body, #content, .section, .task {
