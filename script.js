@@ -168,6 +168,22 @@ function renderRichSections(card, container) {
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // Supabase の URL と anon キーを以下の順で取得します:
+// 印刷時にselectの全選択肢を横並びで表示する
+function insertPrintSelectOptions() {
+  document.querySelectorAll('select').forEach(sel => {
+    if (sel.nextSibling && sel.nextSibling.classList && sel.nextSibling.classList.contains('print-select-options')) return;
+    const opts = Array.from(sel.options).map(o => o.textContent).join('・');
+    const span = document.createElement('span');
+    span.className = 'print-select-options';
+    span.textContent = opts;
+    sel.after(span);
+  });
+}
+function removePrintSelectOptions() {
+  document.querySelectorAll('.print-select-options').forEach(e => e.remove());
+}
+window.addEventListener('beforeprint', insertPrintSelectOptions);
+window.addEventListener('afterprint', removePrintSelectOptions);
 // 管理者時のみ右上に印刷ボタンを常時表示
 function setupGlobalPrintButton() {
   // 既存ボタンがあれば削除

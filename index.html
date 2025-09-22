@@ -8,6 +8,18 @@
     <meta charset="UTF-8" />
   <title>吹田市災害時アクションカードアプリ　南山田地区</title>
     <style>
+          /* 印刷時にselectを非表示し、JSで横並びテキストを表示 */
+          @media print {
+            select {
+              display: none !important;
+            }
+            .print-select-options {
+              display: inline !important;
+              font-size: 9.5pt !important;
+              color: #222 !important;
+              margin-left: 0.5em;
+            }
+          }
           /* 印刷時に編集・削除ボタンを非表示 */
           @media print {
             .task button, .section button, .edit-btn, .del-btn, .admin-btn, .print-btn {
