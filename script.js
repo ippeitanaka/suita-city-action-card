@@ -168,9 +168,47 @@ function renderRichSections(card, container) {
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // Supabase の URL と anon キーを以下の順で取得します:
+// 管理者時のみ右上に印刷ボタンを常時表示
+function setupGlobalPrintButton() {
+  // 既存ボタンがあれば削除
+  const oldBtn = document.getElementById('global-print-btn');
+  if (oldBtn) oldBtn.remove();
+  if (!isAdmin) return;
+  const btn = document.createElement('button');
+  btn.id = 'global-print-btn';
+  btn.textContent = '印刷';
+  btn.style.position = 'fixed';
+  btn.style.top = '16px';
+  btn.style.right = '24px';
+  btn.style.zIndex = '2000';
+  btn.style.background = '#4b8';
+  btn.style.color = '#fff';
+  btn.style.fontWeight = 'bold';
+  btn.style.fontSize = '1.1rem';
+  btn.style.padding = '0.5em 1.5em';
+  btn.style.border = 'none';
+  btn.style.borderRadius = '8px';
+  btn.style.boxShadow = '0 2px 8px #0002';
+  btn.style.cursor = 'pointer';
+  btn.className = 'admin-only';
+  btn.onclick = () => window.print();
+  document.body.appendChild(btn);
+}
+
 // 管理者ログイン状態（管理ボタンでON、ログアウトでOFF）
 let isAdmin = false;
 if (window.localStorage.getItem('isAdmin') === '1') isAdmin = true;
+
+// 初回表示時に印刷ボタン設置
+setupGlobalPrintButton();
+
+// 管理者ログイン/ログアウト時にも再設置（isAdmin切替時に呼ぶこと）
+window.addEventListener('storage', (e) => {
+  if (e.key === 'isAdmin') setTimeout(setupGlobalPrintButton, 100);
+});
+
+// ページ遷移時にも再設置（SPAなので）
+window.addEventListener('hashchange', setupGlobalPrintButton);
 
 // 1) `window.SUPABASE_URL` / `window.SUPABASE_ANON_KEY` (deploy 時に生成された config.js から注入)
 // 2) localStorage (ローカル検証用)
