@@ -168,6 +168,10 @@ function renderRichSections(card, container) {
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // Supabase の URL と anon キーを以下の順で取得します:
+// 管理者ログイン状態（管理ボタンでON、ログアウトでOFF）
+let isAdmin = false;
+if (window.localStorage.getItem('isAdmin') === '1') isAdmin = true;
+
 // 1) `window.SUPABASE_URL` / `window.SUPABASE_ANON_KEY` (deploy 時に生成された config.js から注入)
 // 2) localStorage (ローカル検証用)
 // 設定がない場合は空文字列になり Supabase は無効になります。
@@ -823,32 +827,34 @@ async function renderCard(cardId) {
     container.appendChild(metaDiv);
   }
   // セクションを1つずつ描画
+    const fixedSections = ['初動', '避難所準備', '総本部指示'];
     (card.sections || []).forEach((section, secIdx) => {
       const sectionDiv = document.createElement('div');
       sectionDiv.className = 'section';
       sectionDiv.style.position = 'relative';
-      // セクション削除ボタン
-      const delSecBtn = document.createElement('button');
-      delSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M6 8v6m4-6v6m4-6v6M3 6h14M5 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="6" width="16" height="12" rx="2" stroke="#888" stroke-width="1.5"/></svg>';
-      delSecBtn.title = 'セクション削除';
-      delSecBtn.style.position = 'absolute';
-      delSecBtn.style.top = '0.7em';
-      delSecBtn.style.right = '0.7em';
-      delSecBtn.style.background = 'transparent';
-      delSecBtn.style.border = 'none';
-      delSecBtn.style.cursor = 'pointer';
-      delSecBtn.style.opacity = '0.6';
-      delSecBtn.onmouseover = () => delSecBtn.style.opacity = '1';
-      delSecBtn.onmouseout = () => delSecBtn.style.opacity = '0.6';
-      delSecBtn.onclick = async () => {
-        if (!confirm('このセクションを削除しますか？')) return;
-        card.sections.splice(secIdx, 1);
-        await updateCardSections(cardId, card.sections);
-        renderCard(cardId);
-      };
-      sectionDiv.appendChild(delSecBtn);
+      // セクション削除ボタン（特定セクションは非表示）
+      if (!fixedSections.includes(section.name)) {
+        const delSecBtn = document.createElement('button');
+        delSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M6 8v6m4-6v6m4-6v6M3 6h14M5 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="6" width="16" height="12" rx="2" stroke="#888" stroke-width="1.5"/></svg>';
+        delSecBtn.title = 'セクション削除';
+        delSecBtn.style.position = 'absolute';
+        delSecBtn.style.top = '0.7em';
+        delSecBtn.style.right = '0.7em';
+        delSecBtn.style.background = 'transparent';
+        delSecBtn.style.border = 'none';
+        delSecBtn.style.cursor = 'pointer';
+        delSecBtn.style.opacity = '0.6';
+        delSecBtn.onmouseover = () => delSecBtn.style.opacity = '1';
+        delSecBtn.onmouseout = () => delSecBtn.style.opacity = '0.6';
+        delSecBtn.onclick = async () => {
+          if (!confirm('このセクションを削除しますか？')) return;
+          card.sections.splice(secIdx, 1);
+          await updateCardSections(cardId, card.sections);
+          renderCard(cardId);
+        };
+        sectionDiv.appendChild(delSecBtn);
+      }
       // セクション編集ボタン（特定セクション名は除外）
-      const fixedSections = ['初動', '避難所準備', '総本部指示'];
       if (!fixedSections.includes(section.name)) {
         const editSecBtn = document.createElement('button');
         editSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.5" stroke-linecap="round"/></svg>';
@@ -904,48 +910,51 @@ async function renderCard(cardId) {
         const taskDiv = document.createElement('div');
         taskDiv.className = 'task';
         taskDiv.style.position = 'relative';
-        // タスク削除ボタン
-        const delTaskBtn = document.createElement('button');
-        delTaskBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M6 8v6m4-6v6m4-6v6M3 6h14M5 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" stroke="#888" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="6" width="16" height="12" rx="2" stroke="#888" stroke-width="1.3"/></svg>';
-        delTaskBtn.title = 'タスク削除';
-        delTaskBtn.style.position = 'absolute';
-        delTaskBtn.style.top = '0.2em';
-        delTaskBtn.style.right = '0.2em';
-        delTaskBtn.style.background = 'transparent';
-        delTaskBtn.style.border = 'none';
-        delTaskBtn.style.cursor = 'pointer';
-        delTaskBtn.style.opacity = '0.5';
-        delTaskBtn.onmouseover = () => delTaskBtn.style.opacity = '1';
-        delTaskBtn.onmouseout = () => delTaskBtn.style.opacity = '0.5';
-        delTaskBtn.onclick = async () => {
-          if (!confirm('このタスクを削除しますか？')) return;
-          section.tasks.splice(taskIdx, 1);
-          await updateCardSections(cardId, card.sections);
-          renderCard(cardId);
-        };
-        taskDiv.appendChild(delTaskBtn);
-        // タスク編集ボタン
-        const editTaskBtn = document.createElement('button');
-        editTaskBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.3" stroke-linecap="round"/></svg>';
-        editTaskBtn.title = 'タスク名編集';
-        editTaskBtn.style.position = 'absolute';
-        editTaskBtn.style.top = '0.2em';
-        editTaskBtn.style.right = '2.0em';
-        editTaskBtn.style.background = 'transparent';
-        editTaskBtn.style.border = 'none';
-        editTaskBtn.style.cursor = 'pointer';
-        editTaskBtn.style.opacity = '0.7';
-        editTaskBtn.onmouseover = () => editTaskBtn.style.opacity = '1';
-        editTaskBtn.onmouseout = () => editTaskBtn.style.opacity = '0.7';
-        editTaskBtn.onclick = async () => {
-          const newDesc = prompt('新しいタスク名を入力してください', task.description);
-          if (newDesc && newDesc.trim() !== task.description) {
-            task.description = newDesc.trim();
+        // 管理モード時のみタスク削除・編集ボタン
+        if (isAdmin) {
+          // タスク削除ボタン
+          const delTaskBtn = document.createElement('button');
+          delTaskBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M6 8v6m4-6v6m4-6v6M3 6h14M5 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" stroke="#888" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="6" width="16" height="12" rx="2" stroke="#888" stroke-width="1.3"/></svg>';
+          delTaskBtn.title = 'タスク削除';
+          delTaskBtn.style.position = 'absolute';
+          delTaskBtn.style.top = '0.2em';
+          delTaskBtn.style.right = '0.2em';
+          delTaskBtn.style.background = 'transparent';
+          delTaskBtn.style.border = 'none';
+          delTaskBtn.style.cursor = 'pointer';
+          delTaskBtn.style.opacity = '0.5';
+          delTaskBtn.onmouseover = () => delTaskBtn.style.opacity = '1';
+          delTaskBtn.onmouseout = () => delTaskBtn.style.opacity = '0.5';
+          delTaskBtn.onclick = async () => {
+            if (!confirm('このタスクを削除しますか？')) return;
+            section.tasks.splice(taskIdx, 1);
             await updateCardSections(cardId, card.sections);
             renderCard(cardId);
-          }
-        };
-        taskDiv.appendChild(editTaskBtn);
+          };
+          taskDiv.appendChild(delTaskBtn);
+          // タスク編集ボタン
+          const editTaskBtn = document.createElement('button');
+          editTaskBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.3" stroke-linecap="round"/></svg>';
+          editTaskBtn.title = 'タスク名編集';
+          editTaskBtn.style.position = 'absolute';
+          editTaskBtn.style.top = '0.2em';
+          editTaskBtn.style.right = '2.0em';
+          editTaskBtn.style.background = 'transparent';
+          editTaskBtn.style.border = 'none';
+          editTaskBtn.style.cursor = 'pointer';
+          editTaskBtn.style.opacity = '0.7';
+          editTaskBtn.onmouseover = () => editTaskBtn.style.opacity = '1';
+          editTaskBtn.onmouseout = () => editTaskBtn.style.opacity = '0.7';
+          editTaskBtn.onclick = async () => {
+            const newDesc = prompt('新しいタスク名を入力してください', task.description);
+            if (newDesc && newDesc.trim() !== task.description) {
+              task.description = newDesc.trim();
+              await updateCardSections(cardId, card.sections);
+              renderCard(cardId);
+            }
+          };
+          taskDiv.appendChild(editTaskBtn);
+        }
         // ...既存のタスク描画処理...
         if (task.type === 'boolean') {
           const label = document.createElement('label');
@@ -1085,7 +1094,7 @@ function showHome() {
   img.style.objectFit = 'contain';
   img.style.position = 'relative';
   imgDiv.appendChild(img);
-  // ボタン
+  // 地区を選ぶボタン
   const btn = document.createElement('button');
   btn.textContent = '地区を選ぶ';
   btn.className = 'big-main-btn';
@@ -1095,6 +1104,39 @@ function showHome() {
   btn.style.bottom = '18vh';
   btn.addEventListener('click', showAreaSelect);
   imgDiv.appendChild(btn);
+
+  // 管理ボタン
+  const adminBtn = document.createElement('button');
+  adminBtn.textContent = isAdmin ? 'ログアウト' : '管理';
+  adminBtn.className = 'admin-btn';
+  adminBtn.style.position = 'absolute';
+  adminBtn.style.right = '2vw';
+  adminBtn.style.top = '2vh';
+  adminBtn.style.background = isAdmin ? '#fee2e2' : '#e0e7ff';
+  adminBtn.style.color = '#222';
+  adminBtn.style.padding = '0.5em 1.2em';
+  adminBtn.style.borderRadius = '8px';
+  adminBtn.style.border = '1px solid #888';
+  adminBtn.style.fontWeight = 'bold';
+  adminBtn.onclick = () => {
+    if (isAdmin) {
+      isAdmin = false;
+      window.localStorage.setItem('isAdmin', '0');
+      alert('管理モードを終了しました');
+      showHome();
+    } else {
+      const pw = prompt('管理パスワードを入力してください');
+      if (pw === 'sac') {
+        isAdmin = true;
+        window.localStorage.setItem('isAdmin', '1');
+        alert('管理モードになりました');
+        showHome();
+      } else {
+        alert('パスワードが違います');
+      }
+    }
+  };
+  imgDiv.appendChild(adminBtn);
   container.appendChild(imgDiv);
 }
 
@@ -1141,24 +1183,26 @@ function showAreaSelect() {
     areaDiv.appendChild(btn);
   });
 
-  // 地区追加ボタン
-  const addAreaBtn = document.createElement('button');
-  addAreaBtn.innerHTML = '<span style="font-size:1.5em;vertical-align:middle;">＋</span> 地区を追加';
-  addAreaBtn.className = 'big-main-btn';
-  addAreaBtn.style.background = '#e0e7ff';
-  addAreaBtn.style.color = '#222';
-  addAreaBtn.style.marginTop = '2em';
-  addAreaBtn.onclick = async () => {
-    const newArea = prompt('新しい地区名を入力してください');
-    if (!newArea || !newArea.trim()) return;
-    // Supabaseに登録
-    if (supabase) {
-      await upsertActionStatus(newArea.trim(), '', false);
-    }
-    // 画面を再描画
-    showAreaSelect();
-  };
-  areaDiv.appendChild(addAreaBtn);
+  // 管理モード時のみ地区追加ボタン
+  if (isAdmin) {
+    const addAreaBtn = document.createElement('button');
+    addAreaBtn.innerHTML = '<span style="font-size:1.5em;vertical-align:middle;">＋</span> 地区を追加';
+    addAreaBtn.className = 'big-main-btn';
+    addAreaBtn.style.background = '#e0e7ff';
+    addAreaBtn.style.color = '#222';
+    addAreaBtn.style.marginTop = '2em';
+    addAreaBtn.onclick = async () => {
+      const newArea = prompt('新しい地区名を入力してください');
+      if (!newArea || !newArea.trim()) return;
+      // Supabaseに登録
+      if (supabase) {
+        await upsertActionStatus(newArea.trim(), '', false);
+      }
+      // 画面を再描画
+      showAreaSelect();
+    };
+    areaDiv.appendChild(addAreaBtn);
+  }
   container.appendChild(areaDiv);
 }
 
@@ -1209,37 +1253,39 @@ function showPlaceSelect() {
     placeDiv.appendChild(createPlaceButton(placeName));
   });
 
-  // 実施場所追加ボタン
-  const addPlaceBtn = document.createElement('button');
-  addPlaceBtn.innerHTML = '<span style="font-size:1.3em;vertical-align:middle;">＋</span> 実施場所を追加';
-  addPlaceBtn.className = 'place-btn';
-  addPlaceBtn.style.background = '#e0e7ff';
-  addPlaceBtn.style.color = '#222';
-  addPlaceBtn.style.marginTop = '2em';
-  addPlaceBtn.onclick = async () => {
-    const newPlace = prompt('新しい実施場所名を入力してください');
-    if (!newPlace || !newPlace.trim()) return;
-    const area = CURRENT_AREA || '南山田地区';
-    // Supabaseに登録
-    if (supabase) {
-      await upsertActionStatus(area, newPlace.trim(), false);
-      // デフォルトアクションカードを複製（idにarea/placeを付与して保存）
-      for (const [cardId, cardObj] of Object.entries(fallbackCards)) {
-        const newCardId = `${area}_${newPlace.trim()}_${cardId}`;
-        // 既存カードのsectionsを複製
-        const cardData = {
-          id: newCardId,
-          title: cardObj.title,
-          sections: JSON.parse(JSON.stringify(cardObj.sections)),
-        };
-        // cardsテーブルにinsert（upsertでOK）
-        await supabase.from('cards').upsert(cardData, { onConflict: ['id'] });
+  // 管理モード時のみ実施場所追加ボタン
+  if (isAdmin) {
+    const addPlaceBtn = document.createElement('button');
+    addPlaceBtn.innerHTML = '<span style="font-size:1.3em;vertical-align:middle;">＋</span> 実施場所を追加';
+    addPlaceBtn.className = 'place-btn';
+    addPlaceBtn.style.background = '#e0e7ff';
+    addPlaceBtn.style.color = '#222';
+    addPlaceBtn.style.marginTop = '2em';
+    addPlaceBtn.onclick = async () => {
+      const newPlace = prompt('新しい実施場所名を入力してください');
+      if (!newPlace || !newPlace.trim()) return;
+      const area = CURRENT_AREA || '南山田地区';
+      // Supabaseに登録
+      if (supabase) {
+        await upsertActionStatus(area, newPlace.trim(), false);
+        // デフォルトアクションカードを複製（idにarea/placeを付与して保存）
+        for (const [cardId, cardObj] of Object.entries(fallbackCards)) {
+          const newCardId = `${area}_${newPlace.trim()}_${cardId}`;
+          // 既存カードのsectionsを複製
+          const cardData = {
+            id: newCardId,
+            title: cardObj.title,
+            sections: JSON.parse(JSON.stringify(cardObj.sections)),
+          };
+          // cardsテーブルにinsert（upsertでOK）
+          await supabase.from('cards').upsert(cardData, { onConflict: ['id'] });
+        }
       }
-    }
-    // 画面を再描画
-    showPlaceSelect();
-  };
-  placeDiv.appendChild(addPlaceBtn);
+      // 画面を再描画
+      showPlaceSelect();
+    };
+    placeDiv.appendChild(addPlaceBtn);
+  }
 
   container.appendChild(placeDiv);
 }
