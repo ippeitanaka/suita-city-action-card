@@ -847,28 +847,31 @@ async function renderCard(cardId) {
         renderCard(cardId);
       };
       sectionDiv.appendChild(delSecBtn);
-      // セクション編集ボタン
-      const editSecBtn = document.createElement('button');
-      editSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.5" stroke-linecap="round"/></svg>';
-      editSecBtn.title = 'セクション名編集';
-      editSecBtn.style.position = 'absolute';
-      editSecBtn.style.top = '0.7em';
-      editSecBtn.style.right = '2.5em';
-      editSecBtn.style.background = 'transparent';
-      editSecBtn.style.border = 'none';
-      editSecBtn.style.cursor = 'pointer';
-      editSecBtn.style.opacity = '0.7';
-      editSecBtn.onmouseover = () => editSecBtn.style.opacity = '1';
-      editSecBtn.onmouseout = () => editSecBtn.style.opacity = '0.7';
-      editSecBtn.onclick = async () => {
-        const newName = prompt('新しいセクション名を入力してください', section.name);
-        if (newName && newName.trim() !== section.name) {
-          section.name = newName.trim();
-          await updateCardSections(cardId, card.sections);
-          renderCard(cardId);
-        }
-      };
-      sectionDiv.appendChild(editSecBtn);
+      // セクション編集ボタン（特定セクション名は除外）
+      const fixedSections = ['初動', '避難所準備', '総本部指示'];
+      if (!fixedSections.includes(section.name)) {
+        const editSecBtn = document.createElement('button');
+        editSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.5" stroke-linecap="round"/></svg>';
+        editSecBtn.title = 'セクション名編集';
+        editSecBtn.style.position = 'absolute';
+        editSecBtn.style.top = '0.7em';
+        editSecBtn.style.right = '2.5em';
+        editSecBtn.style.background = 'transparent';
+        editSecBtn.style.border = 'none';
+        editSecBtn.style.cursor = 'pointer';
+        editSecBtn.style.opacity = '0.7';
+        editSecBtn.onmouseover = () => editSecBtn.style.opacity = '1';
+        editSecBtn.onmouseout = () => editSecBtn.style.opacity = '0.7';
+        editSecBtn.onclick = async () => {
+          const newName = prompt('新しいセクション名を入力してください', section.name);
+          if (newName && newName.trim() !== section.name) {
+            section.name = newName.trim();
+            await updateCardSections(cardId, card.sections);
+            renderCard(cardId);
+          }
+        };
+        sectionDiv.appendChild(editSecBtn);
+      }
       const header = document.createElement('h2');
       header.textContent = section.name;
       sectionDiv.appendChild(header);
