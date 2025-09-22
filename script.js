@@ -1218,13 +1218,19 @@ function showAreaSelect() {
   areaDiv.appendChild(title);
   // 地区リスト（Supabase未連携のため現状は固定）
   const areaList = ['南山田地区'];
+  // 場所リストはshowPlaceSelectと揃える
+  const placeList = ['南山田小学校', '山田中学校', '南山田公民館'];
   areaList.forEach(areaName => {
     const btn = document.createElement('button');
     btn.textContent = areaName;
     btn.className = 'big-main-btn';
     (async () => {
-      const active = await fetchActionStatus(areaName, '');
-      if (active) {
+      let anyActive = false;
+      for (const placeName of placeList) {
+        const active = await fetchActionStatus(areaName, placeName);
+        if (active) { anyActive = true; break; }
+      }
+      if (anyActive) {
         btn.style.background = '#f87171'; // 赤系
         btn.style.color = '#fff';
       } else {
