@@ -336,6 +336,48 @@
       <button data-card="injured_response">負傷者対応</button>
   <button data-card="hq_supplies">総本部携行備品</button>
   <button data-card="hq_info_report">総本部担当</button>
+        <style>
+          @media print {
+            html, body {
+              width: 210mm;
+              min-width: 0;
+              max-width: 210mm;
+              margin: 0 auto !important;
+              padding: 0 !important;
+              background: #fff !important;
+              font-size: 12pt;
+            }
+            #tabs, #top-action-controls, .admin-only, .print-hide, button, nav, header, footer {
+              display: none !important;
+            }
+            #content, .section {
+              width: 100% !important;
+              max-width: 190mm;
+              margin: 0 auto !important;
+              box-sizing: border-box;
+            }
+            .task, .section {
+              page-break-inside: avoid;
+            }
+            h1, h2, h3 {
+              page-break-after: avoid;
+            }
+            input, textarea, select {
+              border: none !important;
+              background: none !important;
+              box-shadow: none !important;
+              font-size: 12pt !important;
+              width: auto !important;
+            }
+            label {
+              font-size: 12pt !important;
+            }
+            body {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+          }
+        </style>
   <button data-card="secondary_disaster">二次災害防止担当</button>
   <button data-card="open_chat">オープンチャット担当</button>
     </div>
