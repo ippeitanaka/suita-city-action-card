@@ -1119,6 +1119,7 @@ function setupTabs(cardId, cardLabel) {
 
 function showHome() {
   location.hash = '#home';
+  document.title = "TOP";
   setHeaderVisible(false);
   const container = document.getElementById('content');
   if (!container) {
@@ -1195,6 +1196,7 @@ function showHome() {
 
 function showAreaSelect() {
   location.hash = '#area';
+  document.title = CURRENT_AREA || "南山田地区";
   setHeaderVisible(false);
   const container = document.getElementById('content');
   container.innerHTML = '';
@@ -1271,6 +1273,7 @@ function showAreaSelect() {
 
 function showPlaceSelect() {
   location.hash = '#place:' + encodeURIComponent(CURRENT_AREA || '');
+  document.title = CURRENT_PLACE || "南山田小学校";
   setHeaderVisible(false);
   const container = document.getElementById('content');
   container.innerHTML = '';
@@ -1365,6 +1368,7 @@ function showPlaceSelect() {
 
 function showActionCard(cardId, cardLabel) {
   location.hash = '#card:' + encodeURIComponent(cardId) + ':' + encodeURIComponent(CURRENT_AREA || '') + ':' + encodeURIComponent(CURRENT_PLACE || '');
+  document.title = cardLabel;
   // ヘッダーに地区・場所を追加
   const fullLabel = `${cardLabel} - ${CURRENT_AREA || '南山田地区'} ${CURRENT_PLACE || '南山田小学校'}`;
   setHeaderVisible(true, fullLabel);
