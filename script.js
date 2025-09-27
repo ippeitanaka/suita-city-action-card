@@ -113,6 +113,23 @@
   }
   upsertCardByTitleOrId(carryingItemsRich, ['携行備品']);
   upsertCardByTitleOrId(infoReportRich, ['情報収集', '報告', '情報収集・報告']);
+  // オープンチャット担当カード復活
+  registry['open_chat'] = {
+    id: 'open_chat',
+    title: 'オープンチャット担当',
+    richSections: [
+      {
+        title: 'オープンチャット運用',
+        blocks: [
+          { type: 'raw', text: '災害時の情報共有・連絡のため、オープンチャットを活用します。' },
+          { type: 'raw', text: '・参加者は事前に登録しておくこと' },
+          { type: 'raw', text: '・重要情報は必ず管理者が確認・配信すること' },
+          { type: 'check', text: '参加者リストを確認した' },
+          { type: 'field', label: '連絡事項・備考', value: '' }
+        ]
+      }
+    ]
+  };
   if (window.fallbackCards) window.fallbackCards = registry;
 })();
 
@@ -1009,8 +1026,9 @@ async function renderCard(cardId) {
       const sectionDiv = document.createElement('div');
       sectionDiv.className = 'section';
       sectionDiv.style.position = 'relative';
-      // セクション削除ボタン（特定セクションは非表示）
-      if (!fixedSections.includes(section.name)) {
+      // セクション削除・編集ボタン（管理モード時のみ表示、特定セクションは非表示）
+      if (isAdmin && !fixedSections.includes(section.name)) {
+        // 削除ボタン
         const delSecBtn = document.createElement('button');
         delSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M6 8v6m4-6v6m4-6v6M3 6h14M5 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="6" width="16" height="12" rx="2" stroke="#888" stroke-width="1.5"/></svg>';
         delSecBtn.title = 'セクション削除';
@@ -1030,9 +1048,7 @@ async function renderCard(cardId) {
           await renderCard(cardId);
         };
         sectionDiv.appendChild(delSecBtn);
-      }
-      // セクション編集ボタン（特定セクション名は除外）
-      if (!fixedSections.includes(section.name)) {
+        // 編集ボタン
         const editSecBtn = document.createElement('button');
         editSecBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle"><path d="M4 13.5V16h2.5l7.1-7.1a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0L4 13.5z" stroke="#4b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l2 2" stroke="#4b8" stroke-width="1.5" stroke-linecap="round"/></svg>';
         editSecBtn.title = 'セクション名編集';
