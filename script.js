@@ -1223,8 +1223,7 @@ function setupTabs(cardId, cardLabel) {
       document.querySelectorAll('#tabs button').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       const cid = btn.dataset.card;
-      const fullCardId = `${CURRENT_AREA || '南山田地区'}_${CURRENT_PLACE || '南山田小学校'}_${cid}`;
-      showActionCard(fullCardId, btn.textContent);
+      showActionCard(cid, btn.textContent);
     };
     btn.classList.remove('active');
     if (btn.dataset.card === cardId.split('_').pop()) btn.classList.add('active');
@@ -1402,7 +1401,7 @@ function showPlaceSelect() {
   backBtn.style.top = '1rem';
   backBtn.style.fontSize = '1rem';
   backBtn.style.padding = '0.4rem 1.2rem';
-  backBtn.style.background = '#fff';
+  backBtn.style background = '#fff';
   backBtn.style.border = '1px solid #888';
   backBtn.style.borderRadius = '6px';
   backBtn.style.zIndex = '10';
@@ -1482,7 +1481,12 @@ function showPlaceSelect() {
 // showCardMenuは不要になったため削除
 
 function showActionCard(cardId, cardLabel) {
-  location.hash = '#card:' + encodeURIComponent(cardId) + ':' + encodeURIComponent(CURRENT_AREA || '') + ':' + encodeURIComponent(CURRENT_PLACE || '');
+  // Supabase用ID生成
+  let supabaseCardId = cardId;
+  if (!cardId.includes('_') && CURRENT_AREA && CURRENT_PLACE) {
+    supabaseCardId = `${CURRENT_AREA}_${CURRENT_PLACE}_${cardId}`;
+  }
+  location.hash = '#card:' + encodeURIComponent(supabaseCardId) + ':' + encodeURIComponent(CURRENT_AREA || '') + ':' + encodeURIComponent(CURRENT_PLACE || '');
   document.title = cardLabel;
   // ヘッダーに地区・場所を追加
   const fullLabel = `${cardLabel} - ${CURRENT_AREA || '南山田地区'} ${CURRENT_PLACE || '南山田小学校'}`;
@@ -1563,7 +1567,7 @@ function showActionCard(cardId, cardLabel) {
   // タブUIを必ず表示
   document.getElementById('tabs').style.display = '';
   setupTabs(cardId, cardLabel);
-  renderCard(cardId);
+  renderCard(supabaseCardId);
 }
 
 // 初期表示はホーム画面
