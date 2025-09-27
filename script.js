@@ -129,7 +129,7 @@ function renderRichSections(card, container) {
   (card.richSections || []).forEach((section, secIdx) => {
     const secDiv = document.createElement('div');
     secDiv.className = 'section';
-    secDiv.draggable = isAdmin;
+    secDiv.draggable = false;
     secDiv.dataset.index = secIdx;
     if (isAdmin) {
       const dragHandle = document.createElement('span');
@@ -137,6 +137,12 @@ function renderRichSections(card, container) {
       dragHandle.style.cursor = 'grab';
       dragHandle.style.fontSize = '1.5em';
       dragHandle.style.marginRight = '0.7em';
+      dragHandle.addEventListener('mousedown', () => {
+        secDiv.draggable = true;
+      });
+      dragHandle.addEventListener('mouseup', () => {
+        secDiv.draggable = false;
+      });
       secDiv.prepend(dragHandle);
     }
     if (section.title) {
@@ -148,7 +154,7 @@ function renderRichSections(card, container) {
     (section.blocks || []).forEach((block, blockIdx) => {
       const blockDiv = document.createElement('div');
       blockDiv.className = 'task';
-      blockDiv.draggable = isAdmin;
+      blockDiv.draggable = false;
       blockDiv.dataset.index = blockIdx;
       if (isAdmin) {
         const dragHandle = document.createElement('span');
@@ -156,6 +162,12 @@ function renderRichSections(card, container) {
         dragHandle.style.cursor = 'grab';
         dragHandle.style.fontSize = '1.2em';
         dragHandle.style.marginRight = '0.5em';
+        dragHandle.addEventListener('mousedown', () => {
+          blockDiv.draggable = true;
+        });
+        dragHandle.addEventListener('mouseup', () => {
+          blockDiv.draggable = false;
+        });
         blockDiv.prepend(dragHandle);
       }
       if (block.type === 'raw') {
@@ -196,7 +208,10 @@ function renderRichSections(card, container) {
   if (isAdmin) {
     let dragSrc = null;
     sectionList.addEventListener('dragstart', (e) => {
+      if (!isAdmin) return;
+      if (!e.target.classList.contains('section')) return;
       dragSrc = e.target;
+      dragSrc.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', dragSrc.dataset.index);
     });
@@ -207,10 +222,11 @@ function renderRichSections(card, container) {
     sectionList.addEventListener('drop', async (e) => {
       e.preventDefault();
       if (!dragSrc) return;
-      const srcIdx = Number(dragSrc.dataset.index);
+      dragSrc.classList.remove('dragging');
       let tgt = e.target;
       while (tgt && !tgt.classList.contains('section')) tgt = tgt.parentElement;
       if (!tgt) return;
+      const srcIdx = Number(dragSrc.dataset.index);
       const tgtIdx = Number(tgt.dataset.index);
       if (srcIdx === tgtIdx) return;
       // 並び替え
@@ -226,11 +242,12 @@ function renderRichSections(card, container) {
     sectionList.querySelectorAll('.section').forEach((secDiv, secIdx) => {
       let dragTaskSrc = null;
       secDiv.addEventListener('dragstart', (e) => {
-        if (e.target.classList.contains('task')) {
-          dragTaskSrc = e.target;
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', dragTaskSrc.dataset.index);
-        }
+        if (!isAdmin) return;
+        if (!e.target.classList.contains('task')) return;
+        dragTaskSrc = e.target;
+        dragTaskSrc.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragTaskSrc.dataset.index);
       });
       secDiv.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -239,6 +256,7 @@ function renderRichSections(card, container) {
       secDiv.addEventListener('drop', async (e) => {
         e.preventDefault();
         if (!dragTaskSrc) return;
+        dragTaskSrc.classList.remove('dragging');
         let tgt = e.target;
         while (tgt && !tgt.classList.contains('task')) tgt = tgt.parentElement;
         if (!tgt) return;
