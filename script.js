@@ -778,8 +778,8 @@ async function getCardData(cardId) {
       console.warn('[DEBUG] Supabase からの取得時にエラーが発生しました。fallback を使用します。', err);
     }
   }
-  console.debug('[DEBUG] fallbackCardsから取得', cardId, fallbackCards[cardId]);
-  return structuredClone(fallbackCards[cardId]);
+  console.debug('[DEBUG] fallbackCardsから取得', cardId, fallbackCards[cardId.split('_').pop()]);
+  return structuredClone(fallbackCards[cardId.split('_').pop()]);
 }
 
 /**
@@ -1108,10 +1108,11 @@ function setupTabs(cardId, cardLabel) {
       document.querySelectorAll('#tabs button').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       const cid = btn.dataset.card;
-      showActionCard(cid, btn.textContent);
+      const fullCardId = `${CURRENT_AREA || '南山田地区'}_${CURRENT_PLACE || '南山田小学校'}_${cid}`;
+      showActionCard(fullCardId, btn.textContent);
     };
     btn.classList.remove('active');
-    if (btn.dataset.card === cardId) btn.classList.add('active');
+    if (btn.dataset.card === cardId.split('_').pop()) btn.classList.add('active');
   });
   setHeaderVisible(true, cardLabel);
 }
@@ -1311,7 +1312,8 @@ function showPlaceSelect() {
     btn.addEventListener('click', () => {
       CURRENT_PLACE = placeName;
       document.getElementById('tabs').style.display = '';
-      showActionCard('commander', '指揮者用カード');
+      const fullCardId = `${CURRENT_AREA || '南山田地区'}_${placeName}_commander`;
+      showActionCard(fullCardId, '指揮者用カード');
     });
     return btn;
   };
@@ -1363,7 +1365,9 @@ function showPlaceSelect() {
 
 function showActionCard(cardId, cardLabel) {
   location.hash = '#card:' + encodeURIComponent(cardId) + ':' + encodeURIComponent(CURRENT_AREA || '') + ':' + encodeURIComponent(CURRENT_PLACE || '');
-  setHeaderVisible(true, cardLabel);
+  // ヘッダーに地区・場所を追加
+  const fullLabel = `${cardLabel} - ${CURRENT_AREA || '南山田地区'} ${CURRENT_PLACE || '南山田小学校'}`;
+  setHeaderVisible(true, fullLabel);
   const container = document.getElementById('content');
   container.innerHTML = '';
 
