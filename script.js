@@ -929,6 +929,7 @@ async function updateCardSections(cardId, sections) {
  * @param {string} cardId
  */
 async function renderCard(cardId) {
+  console.log('[DEBUG] renderCard called with', cardId);
   const container = document.getElementById('content');
   if (!container) {
     console.error('[DEBUG] #content element not found in DOM');
@@ -944,6 +945,7 @@ async function renderCard(cardId) {
     container.textContent = '[DEBUG] getCardData error: ' + e;
     return;
   }
+  console.log('[DEBUG] card data:', card);
   container.innerHTML = '';
   if (card.richSections) {
     console.debug('[DEBUG] renderRichSections for', cardId);
@@ -1401,7 +1403,7 @@ function showPlaceSelect() {
   backBtn.style.top = '1rem';
   backBtn.style.fontSize = '1rem';
   backBtn.style.padding = '0.4rem 1.2rem';
-  backBtn.style background = '#fff';
+  backBtn.style.background = '#fff';
   backBtn.style.border = '1px solid #888';
   backBtn.style.borderRadius = '6px';
   backBtn.style.zIndex = '10';
