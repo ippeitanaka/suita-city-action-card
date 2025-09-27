@@ -119,20 +119,50 @@
 // --- richSections描画関数 ---
 function renderRichSections(card, container) {
   container.innerHTML = '';
-  (card.richSections || []).forEach(section => {
+  // 並び替え用: sectionの親div
+  const sectionList = document.createElement('div');
+  sectionList.id = 'section-list';
+  sectionList.style.display = 'flex';
+  sectionList.style.flexDirection = 'column';
+  sectionList.style.gap = '1.5rem';
+  // 並び替え用: sectionごとにdiv生成
+  (card.richSections || []).forEach((section, secIdx) => {
     const secDiv = document.createElement('div');
     secDiv.className = 'section';
+    secDiv.draggable = isAdmin;
+    secDiv.dataset.index = secIdx;
+    if (isAdmin) {
+      const dragHandle = document.createElement('span');
+      dragHandle.textContent = '≡';
+      dragHandle.style.cursor = 'grab';
+      dragHandle.style.fontSize = '1.5em';
+      dragHandle.style.marginRight = '0.7em';
+      secDiv.prepend(dragHandle);
+    }
     if (section.title) {
       const h2 = document.createElement('h2');
       h2.textContent = section.title;
       secDiv.appendChild(h2);
     }
-    (section.blocks || []).forEach(block => {
+    // 並び替え用: taskごとにdiv生成
+    (section.blocks || []).forEach((block, blockIdx) => {
+      const blockDiv = document.createElement('div');
+      blockDiv.className = 'task';
+      blockDiv.draggable = isAdmin;
+      blockDiv.dataset.index = blockIdx;
+      if (isAdmin) {
+        const dragHandle = document.createElement('span');
+        dragHandle.textContent = '≡';
+        dragHandle.style.cursor = 'grab';
+        dragHandle.style.fontSize = '1.2em';
+        dragHandle.style.marginRight = '0.5em';
+        blockDiv.prepend(dragHandle);
+      }
       if (block.type === 'raw') {
         const p = document.createElement('pre');
         p.textContent = block.text;
         p.className = 'mono';
-        secDiv.appendChild(p);
+        blockDiv.appendChild(p);
       } else if (block.type === 'check') {
         const label = document.createElement('label');
         label.style.display = 'block';
@@ -141,7 +171,7 @@ function renderRichSections(card, container) {
         cb.style.marginRight = '0.7em';
         label.appendChild(cb);
         label.appendChild(document.createTextNode(block.text));
-        secDiv.appendChild(label);
+        blockDiv.appendChild(label);
       } else if (block.type === 'field') {
         const fieldDiv = document.createElement('div');
         fieldDiv.style.margin = '0.7em 0';
@@ -154,11 +184,78 @@ function renderRichSections(card, container) {
         input.style.minWidth = '200px';
         fieldDiv.appendChild(label);
         fieldDiv.appendChild(input);
-        secDiv.appendChild(fieldDiv);
+        blockDiv.appendChild(fieldDiv);
       }
+      secDiv.appendChild(blockDiv);
     });
-    container.appendChild(secDiv);
+    sectionList.appendChild(secDiv);
   });
+  container.appendChild(sectionList);
+
+  // ドラッグ＆ドロップイベント（section/task両方）
+  if (isAdmin) {
+    let dragSrc = null;
+    sectionList.addEventListener('dragstart', (e) => {
+      dragSrc = e.target;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragSrc.dataset.index);
+    });
+    sectionList.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    sectionList.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      if (!dragSrc) return;
+      const srcIdx = Number(dragSrc.dataset.index);
+      let tgt = e.target;
+      while (tgt && !tgt.classList.contains('section')) tgt = tgt.parentElement;
+      if (!tgt) return;
+      const tgtIdx = Number(tgt.dataset.index);
+      if (srcIdx === tgtIdx) return;
+      // 並び替え
+      const sections = card.richSections;
+      const moved = sections.splice(srcIdx, 1)[0];
+      sections.splice(tgtIdx, 0, moved);
+      // Supabase保存
+      await updateCardSections(card.id, sections);
+      // 再描画
+      renderRichSections(card, container);
+    });
+    // taskブロックの並び替え
+    sectionList.querySelectorAll('.section').forEach((secDiv, secIdx) => {
+      let dragTaskSrc = null;
+      secDiv.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('task')) {
+          dragTaskSrc = e.target;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', dragTaskSrc.dataset.index);
+        }
+      });
+      secDiv.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+      secDiv.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        if (!dragTaskSrc) return;
+        let tgt = e.target;
+        while (tgt && !tgt.classList.contains('task')) tgt = tgt.parentElement;
+        if (!tgt) return;
+        const srcIdx = Number(dragTaskSrc.dataset.index);
+        const tgtIdx = Number(tgt.dataset.index);
+        if (srcIdx === tgtIdx) return;
+        // 並び替え
+        const blocks = card.richSections[secIdx].blocks;
+        const moved = blocks.splice(srcIdx, 1)[0];
+        blocks.splice(tgtIdx, 0, moved);
+        // Supabase保存
+        await updateCardSections(card.id, card.richSections);
+        // 再描画
+        renderRichSections(card, container);
+      });
+    });
+  }
 }
 // action_card_app/script.js
 // テスト版の災害時アクションカードアプリのメインスクリプトです。
