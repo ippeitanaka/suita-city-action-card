@@ -473,6 +473,9 @@
     </div>
     <main id="content">読み込み中...</main>
 
+    <!-- オフライン/オンライン切り替えボタン -->
+    <button id="offline-toggle" onclick="toggleOfflineMode()" style="position: fixed; bottom: 1rem; left: 1rem; padding: 0.8rem 1.2rem; background: linear-gradient(90deg, #f59e0b 60%, #fbbf24 100%); color: #222; border: none; border-radius: 1rem; font-size: 1rem; font-weight: bold; box-shadow: 0 2px 8px rgba(245,158,11,0.2); cursor: pointer; z-index: 1000;">オフライン</button>
+
     <!-- メインスクリプト。Supabase の匿名キーとURLはローカルストレージに保存するか、ここに直接記述してください -->
     <script type="module" src="./script.js"></script>
   </body>

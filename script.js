@@ -789,8 +789,8 @@ async function getCardData(cardId) {
  * @param {Array} sections
  */
 async function updateCardSections(cardId, sections) {
-  if (!supabase) {
-    console.warn('[DEBUG] supabase未設定のためupdateCardSectionsスキップ', cardId);
+  if (isOfflineMode || !supabase) {
+    await saveLocally(cardId, sections);
     return;
   }
   try {
@@ -1467,3 +1467,67 @@ function restoreFromHash() {
 
 window.addEventListener('hashchange', restoreFromHash);
 restoreFromHash();
+
+// オフライン機能: IndexedDB初期化
+let db;
+let isOfflineMode = false; // オフラインモードフラグ
+
+const request = indexedDB.open('ActionCardDB', 1);
+request.onupgradeneeded = (event) => {
+  db = event.target.result;
+  if (!db.objectStoreNames.contains('pendingUpdates')) {
+    db.createObjectStore('pendingUpdates', { keyPath: 'id', autoIncrement: true });
+  }
+};
+request.onsuccess = (event) => {
+  db = event.target.result;
+};
+
+// オフライン保存関数
+async function saveLocally(cardId, sections) {
+  if (!db) return;
+  const transaction = db.transaction(['pendingUpdates'], 'readwrite');
+  const store = transaction.objectStore('pendingUpdates');
+  store.add({ cardId, sections, timestamp: Date.now() });
+  console.log('[OFFLINE] 保存しました:', cardId);
+}
+
+// オンライン同期関数
+async function syncToSupabase() {
+  if (!navigator.onLine || !supabase || isOfflineMode) return;
+  if (!db) return;
+  const transaction = db.transaction(['pendingUpdates'], 'readwrite');
+  const store = transaction.objectStore('pendingUpdates');
+  const request = store.getAll();
+  request.onsuccess = async () => {
+    for (const item of request.result) {
+      await updateCardSections(item.cardId, item.sections);
+      store.delete(item.id);
+    }
+    console.log('[SYNC] 同期完了');
+  };
+}
+
+// ネットワーク監視
+window.addEventListener('online', syncToSupabase);
+
+// モード切り替え関数
+function toggleOfflineMode() {
+  isOfflineMode = !isOfflineMode;
+  const button = document.getElementById('offline-toggle');
+  if (isOfflineMode) {
+    button.textContent = 'オンライン';
+    button.style.background = 'linear-gradient(90deg, #10b981 60%, #34d399 100%)';
+    console.log('[MODE] オフラインモードに切り替え');
+  } else {
+    button.textContent = 'オフライン';
+    button.style.background = 'linear-gradient(90deg, #f59e0b 60%, #fbbf24 100%)';
+    syncToSupabase(); // オンライン時に同期
+    console.log('[MODE] オンラインモードに切り替え');
+  }
+}
+
+// Service Worker登録
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(() => console.log('[SW] 登録成功'));
+}
