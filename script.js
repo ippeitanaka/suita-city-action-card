@@ -1295,9 +1295,9 @@ function showHome() {
   const adminBtn = document.createElement('button');
   adminBtn.textContent = isAdmin ? 'ログアウト' : '管理';
   adminBtn.className = 'admin-btn';
-  adminBtn.style.position = 'absolute';
+  adminBtn.style.position = 'fixed';
   adminBtn.style.right = isAdmin ? '8vw' : '2vw';
-  adminBtn.style.top = '2vh';
+  adminBtn.style.bottom = '4vh';
   adminBtn.style.background = isAdmin ? '#fee2e2' : '#e0e7ff';
   adminBtn.style.color = '#222';
   adminBtn.style.padding = '0.5em 1.2em';
