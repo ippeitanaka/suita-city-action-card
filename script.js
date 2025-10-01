@@ -1491,7 +1491,28 @@ function showPlaceSelect() {
         placeList = [...new Set(data.map(row => row.place_name).filter(p => p))];
       }
     }
-    if (placeList.length === 0) placeList = ['南山田小学校', '山田中学校', '南山田公民館'];
+    if (placeList.length === 0) {
+      // 実施場所が未登録の場合は何も表示しない（管理モードなら追加ボタンのみ表示）
+      if (isAdmin) {
+        const addPlaceBtn = document.createElement('button');
+        addPlaceBtn.innerHTML = '<span style="font-size:1.5em;vertical-align:middle;">＋</span> 実施場所を追加';
+        addPlaceBtn.className = 'big-main-btn';
+        addPlaceBtn.style.background = '#e0e7ff';
+        addPlaceBtn.style.color = '#222';
+        addPlaceBtn.style.marginTop = '2em';
+        addPlaceBtn.onclick = async () => {
+          const newPlace = prompt('新しい実施場所名を入力してください');
+          if (!newPlace || !newPlace.trim()) return;
+          if (supabase) {
+            await upsertActionStatus(CURRENT_AREA, newPlace.trim(), false);
+          }
+          showPlaceSelect();
+        };
+        placeDiv.appendChild(addPlaceBtn);
+      }
+      // 一般ユーザーには何も表示しない
+      return;
+    }
     placeList.forEach(placeName => {
       placeDiv.appendChild(createPlaceButton(placeName));
     });
