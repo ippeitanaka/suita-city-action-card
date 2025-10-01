@@ -1485,6 +1485,7 @@ function showPlaceSelect() {
         .from('action_status')
         .select('place_name')
         .eq('area_name', CURRENT_AREA)
+        .neq('place_name', '')
         .order('place_name', { ascending: true });
       if (!error && data) {
         placeList = [...new Set(data.map(row => row.place_name).filter(p => p))];
