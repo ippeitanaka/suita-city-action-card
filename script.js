@@ -1351,34 +1351,58 @@ function showAreaSelect() {
   const title = document.createElement('h2');
   title.textContent = '地区を選択してください';
   areaDiv.appendChild(title);
-  // 地区リスト（Supabase未連携のため現状は固定）
-  const areaList = ['南山田地区'];
-  // 場所リストはshowPlaceSelectと揃える
-  const placeList = ['南山田小学校', '山田中学校', '南山田公民館'];
-  areaList.forEach(areaName => {
-    const btn = document.createElement('button');
-    btn.textContent = areaName;
-    btn.className = 'big-main-btn';
-    (async () => {
-      let anyActive = false;
-      for (const placeName of placeList) {
-        const active = await fetchActionStatus(areaName, placeName);
-        if (active) { anyActive = true; break; }
+  // 地区リストをSupabaseから取得
+  (async () => {
+    let areaList = [];
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('action_status')
+        .select('area_name')
+        .eq('place_name', '')
+        .order('area_name', { ascending: true });
+      if (!error && data) {
+        areaList = [...new Set(data.map(row => row.area_name))];
       }
-      if (anyActive) {
-        btn.style.background = '#f87171'; // 赤系
-        btn.style.color = '#fff';
-      } else {
-        btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
-        btn.style.color = '#222';
+    }
+    if (areaList.length === 0) areaList = ['南山田地区'];
+    // 場所リストもSupabaseから取得（最初の地区で仮取得）
+    let placeList = [];
+    if (supabase && areaList.length > 0) {
+      const { data, error } = await supabase
+        .from('action_status')
+        .select('place_name')
+        .eq('area_name', areaList[0])
+        .order('place_name', { ascending: true });
+      if (!error && data) {
+        placeList = [...new Set(data.map(row => row.place_name).filter(p => p))];
       }
-    })();
-    btn.addEventListener('click', () => {
-      CURRENT_AREA = areaName;
-      showPlaceSelect();
+    }
+    if (placeList.length === 0) placeList = ['南山田小学校', '山田中学校', '南山田公民館'];
+    areaList.forEach(areaName => {
+      const btn = document.createElement('button');
+      btn.textContent = areaName;
+      btn.className = 'big-main-btn';
+      (async () => {
+        let anyActive = false;
+        for (const placeName of placeList) {
+          const active = await fetchActionStatus(areaName, placeName);
+          if (active) { anyActive = true; break; }
+        }
+        if (anyActive) {
+          btn.style.background = '#f87171';
+          btn.style.color = '#fff';
+        } else {
+          btn.style.background = 'linear-gradient(90deg, #fde68a 60%, #fbbf24 100%)';
+          btn.style.color = '#222';
+        }
+      })();
+      btn.addEventListener('click', () => {
+        CURRENT_AREA = areaName;
+        showPlaceSelect();
+      });
+      areaDiv.appendChild(btn);
     });
-    areaDiv.appendChild(btn);
-  });
+  })();
 
   // 管理モード時のみ地区追加ボタン
   if (isAdmin) {
@@ -1453,11 +1477,24 @@ function showPlaceSelect() {
     return btn;
   };
 
-  // 場所リスト（Supabase未連携のため現状は固定）
-  const placeList = ['南山田小学校', '山田中学校', '南山田公民館'];
-  placeList.forEach(placeName => {
-    placeDiv.appendChild(createPlaceButton(placeName));
-  });
+  // 場所リストをSupabaseから取得
+  (async () => {
+    let placeList = [];
+    if (supabase && CURRENT_AREA) {
+      const { data, error } = await supabase
+        .from('action_status')
+        .select('place_name')
+        .eq('area_name', CURRENT_AREA)
+        .order('place_name', { ascending: true });
+      if (!error && data) {
+        placeList = [...new Set(data.map(row => row.place_name).filter(p => p))];
+      }
+    }
+    if (placeList.length === 0) placeList = ['南山田小学校', '山田中学校', '南山田公民館'];
+    placeList.forEach(placeName => {
+      placeDiv.appendChild(createPlaceButton(placeName));
+    });
+  })();
 
   // 管理モード時のみ実施場所追加ボタン
   if (isAdmin) {
