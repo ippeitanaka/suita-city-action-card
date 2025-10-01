@@ -1401,6 +1401,25 @@ function showAreaSelect() {
         showPlaceSelect();
       });
       areaDiv.appendChild(btn);
+      // 管理モード時のみ削除ボタン
+      if (isAdmin && areaName !== '南山田地区') {
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '削除';
+        delBtn.className = 'del-btn';
+        delBtn.style.marginLeft = '1em';
+        delBtn.style.background = '#fee2e2';
+        delBtn.style.color = '#b91c1c';
+        delBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (!confirm(areaName + ' を削除しますか？')) return;
+          if (supabase) {
+            await supabase.from('action_status').delete().eq('area_name', areaName);
+            await supabase.from('cards').delete().ilike('id', areaName + '_%');
+          }
+          showAreaSelect();
+        };
+        areaDiv.appendChild(delBtn);
+      }
     });
   })();
 
@@ -1514,7 +1533,27 @@ function showPlaceSelect() {
       return;
     }
     placeList.forEach(placeName => {
-      placeDiv.appendChild(createPlaceButton(placeName));
+      const btn = createPlaceButton(placeName);
+      placeDiv.appendChild(btn);
+      // 管理モード時のみ削除ボタン
+      if (isAdmin) {
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '削除';
+        delBtn.className = 'del-btn';
+        delBtn.style.marginLeft = '1em';
+        delBtn.style.background = '#fee2e2';
+        delBtn.style.color = '#b91c1c';
+        delBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (!confirm(CURRENT_AREA + ' の ' + placeName + ' を削除しますか？')) return;
+          if (supabase) {
+            await supabase.from('action_status').delete().eq('area_name', CURRENT_AREA).eq('place_name', placeName);
+            await supabase.from('cards').delete().ilike('id', `${CURRENT_AREA}_${placeName}_%`);
+          }
+          showPlaceSelect();
+        };
+        placeDiv.appendChild(delBtn);
+      }
     });
   })();
 
